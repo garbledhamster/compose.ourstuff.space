@@ -1,0 +1,974 @@
+<!doctype html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>One-Paragraph Essay Tool</title>
+
+  <!-- Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ["Inter", "ui-sans-serif", "system-ui"] }
+        }
+      }
+    }
+  </script>
+
+  <!-- Markdown renderer + sanitizer (for Reader Mode) -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
+
+  <style>
+    :root {
+      /* Theme variables (Monokai Dark default) */
+      --bg: #272822;
+      --surface: #2d2e27;
+      --surface2: #3e3d32;
+      --border: #49483e;
+
+      --text: #f8f8f2;
+      --muted: #a6a6a1;
+
+      --primary: #a6e22e;
+      --primary2: #66d9ef;
+      --danger: #f92672;
+
+      --shadow: 0 16px 40px rgba(0,0,0,.35);
+      --shadowSoft: 0 10px 22px rgba(0,0,0,.24);
+    }
+
+    html, body { height: 100%; }
+    body { background: var(--bg); color: var(--text); font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+
+    /* Subtle scrollbars */
+    * { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+    *::-webkit-scrollbar { height: 10px; width: 10px; }
+    *::-webkit-scrollbar-thumb { background: var(--border); border-radius: 999px; }
+    *::-webkit-scrollbar-track { background: transparent; }
+
+    /* Tooltip */
+    .tip { position: relative; }
+    .tip::after {
+      content: attr(data-tip);
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: calc(100% + 10px);
+      background: var(--surface2);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 8px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      white-space: nowrap;
+      box-shadow: var(--shadowSoft);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .12s ease, transform .12s ease;
+    }
+    .tip:hover::after { opacity: 1; transform: translateX(-50%) translateY(-2px); }
+
+    /* Reader-mode markdown styling */
+    .md h1, .md h2, .md h3 { font-weight: 800; margin: 0.8rem 0 0.4rem; }
+    .md h1 { font-size: 1.3rem; }
+    .md h2 { font-size: 1.15rem; }
+    .md h3 { font-size: 1.05rem; }
+    .md p { margin: 0.75rem 0; line-height: 1.7; }
+    .md ul { list-style: disc; padding-left: 1.25rem; margin: 0.75rem 0; }
+    .md ol { list-style: decimal; padding-left: 1.25rem; margin: 0.75rem 0; }
+    .md blockquote {
+      border-left: 3px solid var(--primary2);
+      padding-left: 12px;
+      color: var(--muted);
+      margin: 0.9rem 0;
+    }
+    .md code {
+      background: color-mix(in srgb, var(--surface2) 70%, transparent);
+      border: 1px solid var(--border);
+      padding: 2px 6px;
+      border-radius: 10px;
+      font-size: 0.92em;
+    }
+    .md pre {
+      background: color-mix(in srgb, var(--surface2) 70%, transparent);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 12px;
+      overflow: auto;
+      margin: 0.9rem 0;
+    }
+  </style>
+</head>
+
+<body class="h-full">
+  <div id="app" class="min-h-full">
+    <!-- Top Nav -->
+    <header class="sticky top-0 z-40 border-b border-[var(--border)] bg-[var(--bg)]/85 backdrop-blur">
+      <div class="mx-auto max-w-5xl px-4 py-3">
+        <div class="flex items-center justify-between gap-3">
+          <div class="flex items-center gap-3">
+            <div class="h-10 w-10 rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadowSoft)] grid place-items-center">
+              <!-- pen icon -->
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M12 20h9" stroke="var(--muted)" stroke-width="2" stroke-linecap="round"/>
+                <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4 11.5-11.5Z" stroke="var(--primary2)" stroke-width="2" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <div class="leading-tight">
+              <div class="text-sm font-semibold">One-Paragraph Essay Tool</div>
+              <div class="text-xs text-[var(--muted)]">Autosaves locally • Reader/Editor • Structures built-in</div>
+            </div>
+          </div>
+
+          <nav class="flex items-center gap-2">
+            <button id="navWrite" class="px-3 py-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface2)] transition text-sm font-semibold">
+              Write an Essay
+            </button>
+            <button id="navEssays" class="px-3 py-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface2)] transition text-sm font-semibold">
+              Essays
+            </button>
+            <button id="navSettings" class="px-3 py-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface2)] transition text-sm font-semibold">
+              Settings
+            </button>
+          </nav>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main -->
+    <main class="mx-auto max-w-5xl px-4 py-6">
+      <!-- WRITE VIEW -->
+      <section id="viewWrite" class="space-y-5">
+        <div class="grid gap-4 md:grid-cols-12">
+          <!-- Essay Type -->
+          <div class="md:col-span-4">
+            <label class="text-xs font-semibold text-[var(--muted)]">Essay type</label>
+            <div class="mt-2">
+              <select id="essayType" class="w-full rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary2)]">
+                <option value="explanatory">Explanatory</option>
+                <option value="persuasive">Persuasive</option>
+                <option value="narrative">Narrative</option>
+                <option value="analytical">Analytical</option>
+                <option value="reflective">Reflective</option>
+              </select>
+            </div>
+            <p class="mt-2 text-xs text-[var(--muted)]">This mainly changes your mental target (explain vs argue vs tell a story).</p>
+          </div>
+
+          <!-- Structure -->
+          <div class="md:col-span-5">
+            <label class="text-xs font-semibold text-[var(--muted)]">Structure</label>
+            <div class="mt-2 flex gap-2">
+              <select id="structure" class="flex-1 rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary2)]">
+                <option value="problem-evidence-solution">Problem → Evidence → Solution</option>
+                <option value="story-lesson">Story → Lesson</option>
+                <option value="question-explanation-answer">Question → Explanation → Answer</option>
+                <option value="claim-objection-rebuttal">Claim → Objection → Rebuttal</option>
+              </select>
+
+              <button id="btnRandom" class="tip shrink-0 rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-3 py-3 hover:bg-[var(--surface2)] transition"
+                      data-tip="Choose a random note">
+                <!-- dice icon -->
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <rect x="4" y="4" width="16" height="16" rx="4" stroke="var(--text)" stroke-width="2"/>
+                  <circle cx="8.5" cy="8.5" r="1.4" fill="var(--primary)"/>
+                  <circle cx="15.5" cy="15.5" r="1.4" fill="var(--primary)"/>
+                  <circle cx="15.5" cy="8.5" r="1.4" fill="var(--primary2)"/>
+                  <circle cx="8.5" cy="15.5" r="1.4" fill="var(--primary2)"/>
+                  <circle cx="12" cy="12" r="1.4" fill="var(--danger)"/>
+                </svg>
+              </button>
+            </div>
+            <p id="structureHint" class="mt-2 text-xs text-[var(--muted)]"></p>
+          </div>
+
+          <!-- Modes -->
+          <div class="md:col-span-3">
+            <label class="text-xs font-semibold text-[var(--muted)]">Mode</label>
+            <div class="mt-2 grid grid-cols-2 gap-2">
+              <button id="btnEditor" class="rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-3 py-3 text-sm font-semibold hover:bg-[var(--surface2)] transition">
+                Editor
+              </button>
+              <button id="btnReader" class="rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-3 py-3 text-sm font-semibold hover:bg-[var(--surface2)] transition">
+                Reader
+              </button>
+            </div>
+            <button id="btnNew" class="mt-2 w-full rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-3 py-3 text-sm font-semibold hover:bg-[var(--surface2)] transition">
+              New Essay
+            </button>
+          </div>
+        </div>
+
+        <!-- Outline Helper -->
+        <div class="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadowSoft)]">
+          <div class="flex items-center justify-between gap-3">
+            <div>
+              <div class="text-sm font-extrabold">One-paragraph blueprint</div>
+              <div class="text-xs text-[var(--muted)]">Fill these beats inside your paragraph. Keep it tight.</div>
+            </div>
+            <div class="text-xs text-[var(--muted)]" id="autosaveStatus">Autosave: ready</div>
+          </div>
+          <div class="mt-3 grid gap-3 md:grid-cols-12">
+            <div class="md:col-span-6">
+              <div class="text-xs font-semibold text-[var(--muted)]">Structure beats</div>
+              <div id="beats" class="mt-2 rounded-2xl border border-[var(--border)] bg-[var(--bg)] p-3 text-sm leading-relaxed"></div>
+            </div>
+            <div class="md:col-span-6">
+              <div class="text-xs font-semibold text-[var(--muted)]">Micro-checklist</div>
+              <div class="mt-2 rounded-2xl border border-[var(--border)] bg-[var(--bg)] p-3 text-sm leading-relaxed">
+                <ul class="list-disc pl-5 space-y-1 text-[var(--text)]">
+                  <li><span class="font-semibold">1 clear point</span> in the first sentence.</li>
+                  <li><span class="font-semibold">1 concrete example</span> (fact, detail, or mini-scene).</li>
+                  <li><span class="font-semibold">Explain why</span> the example proves the point.</li>
+                  <li><span class="font-semibold">End by landing</span> the idea (so what?).</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Title + Writing Area -->
+        <div class="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow)]">
+          <label class="text-xs font-semibold text-[var(--muted)]">Title</label>
+          <input id="title"
+                 class="mt-2 w-full rounded-2xl border border-[var(--border)] bg-[var(--bg)] px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary2)]"
+                 placeholder="Give it a name (optional)..." />
+
+          <div class="mt-4 flex items-center justify-between gap-3">
+            <label class="text-xs font-semibold text-[var(--muted)]">Write (autosaves as you type)</label>
+
+            <div class="flex items-center gap-2">
+              <button id="btnCopy" class="rounded-2xl border border-[var(--border)] bg-[var(--bg)] px-3 py-2 text-xs font-semibold hover:bg-[var(--surface2)] transition">
+                Copy
+              </button>
+              <button id="btnDelete" class="rounded-2xl border border-[var(--border)] bg-[var(--bg)] px-3 py-2 text-xs font-semibold hover:bg-[var(--surface2)] transition">
+                Delete
+              </button>
+            </div>
+          </div>
+
+          <!-- Editor -->
+          <textarea id="body"
+                    class="mt-2 min-h-[280px] w-full rounded-2xl border border-[var(--border)] bg-[var(--bg)] px-4 py-3 text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-[var(--primary2)]"
+                    placeholder="Write your one paragraph here. Tip: start with the topic sentence, then prove it, then land it."></textarea>
+
+          <!-- Reader -->
+          <div id="reader"
+               class="hidden mt-2 min-h-[280px] w-full rounded-2xl border border-[var(--border)] bg-[var(--bg)] px-4 py-3">
+            <div id="readerInner" class="md md:prose md:prose-invert max-w-none"></div>
+          </div>
+
+          <div class="mt-3 flex items-center justify-between text-xs text-[var(--muted)]">
+            <div id="metaLine">Not saved yet.</div>
+            <div>
+              <span class="inline-flex items-center gap-2">
+                <span class="h-2 w-2 rounded-full bg-[var(--primary)]"></span>
+                Stored locally in your browser
+              </span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SETTINGS VIEW -->
+      <section id="viewSettings" class="hidden space-y-4">
+        <div class="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow)]">
+          <div class="text-lg font-extrabold">Settings</div>
+          <p class="mt-1 text-sm text-[var(--muted)]">Pick a theme. Everything is driven by CSS variables.</p>
+
+          <div class="mt-4 grid gap-3 md:grid-cols-2">
+            <button id="themeDark" class="rounded-3xl border border-[var(--border)] bg-[var(--bg)] p-4 text-left hover:bg-[var(--surface2)] transition">
+              <div class="text-sm font-extrabold">Monokai Dark</div>
+              <div class="mt-1 text-xs text-[var(--muted)]">Deep contrast, neon accents, easy on eyes.</div>
+            </button>
+
+            <button id="themeLight" class="rounded-3xl border border-[var(--border)] bg-[var(--bg)] p-4 text-left hover:bg-[var(--surface2)] transition">
+              <div class="text-sm font-extrabold">Monokai Light</div>
+              <div class="mt-1 text-xs text-[var(--muted)]">Bright paper feel, Monokai-ish pop.</div>
+            </button>
+          </div>
+
+          <div class="mt-5 rounded-2xl border border-[var(--border)] bg-[var(--bg)] p-4">
+            <div class="text-sm font-bold">Data controls</div>
+            <div class="mt-2 flex flex-wrap gap-2">
+              <button id="btnExport" class="rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-xs font-semibold hover:bg-[var(--surface2)] transition">
+                Export JSON
+              </button>
+              <label class="rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-xs font-semibold hover:bg-[var(--surface2)] transition cursor-pointer">
+                Import JSON
+                <input id="importFile" type="file" accept="application/json" class="hidden" />
+              </label>
+              <button id="btnWipe" class="rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-xs font-semibold hover:bg-[var(--surface2)] transition">
+                Wipe All Local Data
+              </button>
+            </div>
+            <p class="mt-2 text-xs text-[var(--muted)]">Export/import is optional but handy when you switch devices.</p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Drawer Overlay -->
+    <div id="overlay" class="hidden fixed inset-0 z-40 bg-black/60"></div>
+
+    <!-- Drawer -->
+    <aside id="drawer" class="fixed right-0 top-0 z-50 h-full w-[360px] max-w-[92vw] translate-x-full transition-transform duration-200"
+           aria-hidden="true">
+      <div class="h-full border-l border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow)] flex flex-col">
+        <div class="px-4 py-4 border-b border-[var(--border)] flex items-center justify-between gap-3">
+          <div>
+            <div class="text-sm font-extrabold">Saved Essays</div>
+            <div class="text-xs text-[var(--muted)]">Tap one to load it.</div>
+          </div>
+          <button id="drawerClose" class="rounded-2xl border border-[var(--border)] bg-[var(--bg)] p-2 hover:bg-[var(--surface2)] transition" aria-label="Close">
+            <!-- X icon -->
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M18 6 6 18M6 6l12 12" stroke="var(--text)" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="p-3">
+          <input id="search" class="w-full rounded-2xl border border-[var(--border)] bg-[var(--bg)] px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary2)]"
+                 placeholder="Search titles..." />
+        </div>
+
+        <div id="essayList" class="flex-1 overflow-auto px-3 pb-4"></div>
+
+        <div class="p-3 border-t border-[var(--border)]">
+          <button id="drawerNew" class="w-full rounded-2xl bg-[var(--primary)] text-black font-extrabold px-4 py-3 hover:brightness-110 transition">
+            New Essay
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Toast -->
+    <div id="toast" class="pointer-events-none fixed bottom-4 left-1/2 -translate-x-1/2 z-[60] hidden">
+      <div class="rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-sm shadow-[var(--shadowSoft)]">
+        <span id="toastMsg"></span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ------------------------------
+    // State + Persistence
+    // ------------------------------
+    const STORAGE_KEY = "oe_state_v1";
+    const THEME_KEY = "oe_theme_v1";
+
+    const themes = {
+      monokaiDark: {
+        name: "Monokai Dark",
+        vars: {
+          "--bg":"#272822",
+          "--surface":"#2d2e27",
+          "--surface2":"#3e3d32",
+          "--border":"#49483e",
+          "--text":"#f8f8f2",
+          "--muted":"#a6a6a1",
+          "--primary":"#a6e22e",
+          "--primary2":"#66d9ef",
+          "--danger":"#f92672",
+          "--shadow":"0 16px 40px rgba(0,0,0,.35)",
+          "--shadowSoft":"0 10px 22px rgba(0,0,0,.24)"
+        }
+      },
+      monokaiLight: {
+        name: "Monokai Light",
+        vars: {
+          "--bg":"#f8f8f2",
+          "--surface":"#ffffff",
+          "--surface2":"#f1f1eb",
+          "--border":"#d6d6cf",
+          "--text":"#272822",
+          "--muted":"#75715e",
+          "--primary":"#fd971f",
+          "--primary2":"#268bd2",
+          "--danger":"#f92672",
+          "--shadow":"0 16px 40px rgba(0,0,0,.12)",
+          "--shadowSoft":"0 10px 22px rgba(0,0,0,.10)"
+        }
+      }
+    };
+
+    function uid() {
+      return "e_" + Math.random().toString(16).slice(2) + "_" + Date.now().toString(16);
+    }
+
+    function nowIso() { return new Date().toISOString(); }
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) {
+          return { essays: [], currentId: null, untitledCounter: 1, view: "write", mode: "editor" };
+        }
+        const parsed = JSON.parse(raw);
+        // minimal validation
+        return {
+          essays: Array.isArray(parsed.essays) ? parsed.essays : [],
+          currentId: parsed.currentId ?? null,
+          untitledCounter: typeof parsed.untitledCounter === "number" ? parsed.untitledCounter : 1,
+          view: parsed.view === "settings" ? "settings" : "write",
+          mode: parsed.mode === "reader" ? "reader" : "editor"
+        };
+      } catch {
+        return { essays: [], currentId: null, untitledCounter: 1, view: "write", mode: "editor" };
+      }
+    }
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function applyTheme(themeKey) {
+      const t = themes[themeKey] || themes.monokaiDark;
+      for (const [k, v] of Object.entries(t.vars)) document.documentElement.style.setProperty(k, v);
+      localStorage.setItem(THEME_KEY, themeKey);
+      toast(`Theme: ${t.name}`);
+    }
+
+    function loadTheme() {
+      const key = localStorage.getItem(THEME_KEY) || "monokaiDark";
+      applyTheme(key);
+    }
+
+    // ------------------------------
+    // UI Elements
+    // ------------------------------
+    const $ = (id) => document.getElementById(id);
+
+    const navWrite = $("navWrite");
+    const navEssays = $("navEssays");
+    const navSettings = $("navSettings");
+
+    const viewWrite = $("viewWrite");
+    const viewSettings = $("viewSettings");
+
+    const essayType = $("essayType");
+    const structure = $("structure");
+    const structureHint = $("structureHint");
+    const beats = $("beats");
+
+    const titleEl = $("title");
+    const bodyEl = $("body");
+    const readerWrap = $("reader");
+    const readerInner = $("readerInner");
+
+    const btnEditor = $("btnEditor");
+    const btnReader = $("btnReader");
+    const btnRandom = $("btnRandom");
+    const btnNew = $("btnNew");
+    const btnCopy = $("btnCopy");
+    const btnDelete = $("btnDelete");
+
+    const metaLine = $("metaLine");
+    const autosaveStatus = $("autosaveStatus");
+
+    const overlay = $("overlay");
+    const drawer = $("drawer");
+    const drawerClose = $("drawerClose");
+    const essayList = $("essayList");
+    const drawerNew = $("drawerNew");
+    const searchEl = $("search");
+
+    const themeDark = $("themeDark");
+    const themeLight = $("themeLight");
+    const btnExport = $("btnExport");
+    const importFile = $("importFile");
+    const btnWipe = $("btnWipe");
+
+    const toastEl = $("toast");
+    const toastMsg = $("toastMsg");
+
+    // ------------------------------
+    // Structure helpers
+    // ------------------------------
+    const structureGuides = {
+      "problem-evidence-solution": {
+        hint: "Use when you want a clean, practical paragraph that ends with an actionable fix.",
+        beats: [
+          "Problem: Name the issue in one sentence.",
+          "Evidence: Give 1 concrete example, fact, or observation.",
+          "Solution: Propose the fix and why it works.",
+          "Landing: End with what improves if the solution is used."
+        ]
+      },
+      "story-lesson": {
+        hint: "Use when a tiny personal scene will make the point more memorable than facts.",
+        beats: [
+          "Story setup: One specific moment (where/when/what).",
+          "Tension: The problem, mistake, fear, or surprise.",
+          "Turn: What changed (choice, insight, result).",
+          "Lesson: State the takeaway in a clean final sentence."
+        ]
+      },
+      "question-explanation-answer": {
+        hint: "Use when you want to teach quickly (like a mini FAQ paragraph).",
+        beats: [
+          "Question: Ask the exact question your paragraph answers.",
+          "Explanation: Break it down with 1–2 clear reasons.",
+          "Example: Add a concrete illustration.",
+          "Answer: State the final answer + why it matters."
+        ]
+      },
+      "claim-objection-rebuttal": {
+        hint: "Use when the reader might disagree—this structure earns trust fast.",
+        beats: [
+          "Claim: State your main point plainly.",
+          "Objection: Name the strongest counterpoint fairly.",
+          "Rebuttal: Explain why your claim still holds (use evidence).",
+          "Landing: Close with a balanced, confident conclusion."
+        ]
+      }
+    };
+
+    function renderStructureHelp() {
+      const g = structureGuides[structure.value] || structureGuides["problem-evidence-solution"];
+      structureHint.textContent = g.hint;
+      beats.innerHTML = `
+        <ol class="list-decimal pl-5 space-y-1">
+          ${g.beats.map(x => `<li>${escapeHtml(x)}</li>`).join("")}
+        </ol>
+      `;
+    }
+
+    // ------------------------------
+    // Essay management
+    // ------------------------------
+    let state = loadState();
+    loadTheme();
+
+    function getCurrentEssay() {
+      if (!state.currentId) return null;
+      return state.essays.find(e => e.id === state.currentId) || null;
+    }
+
+    function ensureCurrentEssayExistsIfNeeded() {
+      const hasContent = (bodyEl.value || "").trim().length > 0;
+      const hasTitle = (titleEl.value || "").trim().length > 0;
+      if (!hasContent && !hasTitle) return null;
+
+      let essay = getCurrentEssay();
+      if (!essay) {
+        const id = uid();
+        const untitled = `Untitled (${state.untitledCounter++})`;
+        essay = {
+          id,
+          title: "",
+          untitledLabel: untitled,
+          type: essayType.value,
+          structure: structure.value,
+          body: "",
+          createdAt: nowIso(),
+          updatedAt: nowIso()
+        };
+        state.essays.unshift(essay);
+        state.currentId = id;
+      }
+      return essay;
+    }
+
+    function normalizeTitle(essay) {
+      const t = (essay.title || "").trim();
+      return t.length ? t : (essay.untitledLabel || "Untitled");
+    }
+
+    function setMeta(essay) {
+      if (!essay) { metaLine.textContent = "Not saved yet."; return; }
+      const t = normalizeTitle(essay);
+      const updated = new Date(essay.updatedAt);
+      metaLine.textContent = `${t} • updated ${updated.toLocaleString()}`;
+    }
+
+    function renderEssayList() {
+      const q = (searchEl.value || "").trim().toLowerCase();
+      const filtered = state.essays.filter(e => normalizeTitle(e).toLowerCase().includes(q));
+
+      if (filtered.length === 0) {
+        essayList.innerHTML = `
+          <div class="mx-1 mt-2 rounded-2xl border border-[var(--border)] bg-[var(--bg)] p-4 text-sm text-[var(--muted)]">
+            No saved essays yet. Start typing and it will auto-save.
+          </div>
+        `;
+        return;
+      }
+
+      essayList.innerHTML = filtered.map(e => {
+        const active = e.id === state.currentId;
+        const label = normalizeTitle(e);
+        const updated = new Date(e.updatedAt).toLocaleString();
+        return `
+          <div class="mt-2 rounded-2xl border border-[var(--border)] ${active ? "bg-[var(--surface2)]" : "bg-[var(--bg)]"} p-3">
+            <button data-open="${e.id}" class="w-full text-left">
+              <div class="flex items-start justify-between gap-3">
+                <div>
+                  <div class="text-sm font-extrabold">${escapeHtml(label)}</div>
+                  <div class="mt-1 text-xs text-[var(--muted)]">${escapeHtml(e.type)} • ${escapeHtml(structureLabel(e.structure))}</div>
+                  <div class="mt-1 text-[11px] text-[var(--muted)]">Updated: ${escapeHtml(updated)}</div>
+                </div>
+                <span class="mt-1 inline-flex items-center rounded-full border border-[var(--border)] bg-[var(--surface)] px-2 py-1 text-[10px] font-semibold">
+                  Open
+                </span>
+              </div>
+            </button>
+            <div class="mt-2 flex gap-2">
+              <button data-delete="${e.id}" class="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-2 py-2 text-[11px] font-semibold hover:bg-[var(--surface2)] transition">
+                Delete
+              </button>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function structureLabel(v) {
+      switch (v) {
+        case "problem-evidence-solution": return "Problem → Evidence → Solution";
+        case "story-lesson": return "Story → Lesson";
+        case "question-explanation-answer": return "Question → Explanation → Answer";
+        case "claim-objection-rebuttal": return "Claim → Objection → Rebuttal";
+        default: return "Structure";
+      }
+    }
+
+    // ------------------------------
+    // Autosave (debounced)
+    // ------------------------------
+    let saveTimer = null;
+    function scheduleSave() {
+      autosaveStatus.textContent = "Autosave: typing…";
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(() => {
+        doSave();
+      }, 200);
+    }
+
+    function doSave() {
+      const essay = ensureCurrentEssayExistsIfNeeded();
+      if (!essay) {
+        autosaveStatus.textContent = "Autosave: ready";
+        setMeta(null);
+        saveState();
+        renderEssayList();
+        return;
+      }
+
+      essay.title = titleEl.value || "";
+      essay.type = essayType.value;
+      essay.structure = structure.value;
+      essay.body = bodyEl.value || "";
+      essay.updatedAt = nowIso();
+
+      autosaveStatus.textContent = "Autosave: saved";
+      setMeta(essay);
+      saveState();
+      renderEssayList();
+
+      if (state.mode === "reader") renderReader();
+    }
+
+    // ------------------------------
+    // Reader mode rendering
+    // ------------------------------
+    function renderReader() {
+      const raw = bodyEl.value || "";
+      const html = marked.parse(raw, { mangle: false, headerIds: false });
+      const clean = DOMPurify.sanitize(html, { USE_PROFILES: { html: true } });
+      readerInner.innerHTML = clean || `<p class="text-[var(--muted)]">Nothing to preview yet.</p>`;
+    }
+
+    function setMode(mode) {
+      state.mode = mode;
+      saveState();
+
+      if (mode === "reader") {
+        bodyEl.classList.add("hidden");
+        readerWrap.classList.remove("hidden");
+        renderReader();
+        btnReader.classList.add("bg-[var(--primary)]","text-black","border-transparent");
+        btnEditor.classList.remove("bg-[var(--primary)]","text-black","border-transparent");
+      } else {
+        readerWrap.classList.add("hidden");
+        bodyEl.classList.remove("hidden");
+        btnEditor.classList.add("bg-[var(--primary)]","text-black","border-transparent");
+        btnReader.classList.remove("bg-[var(--primary)]","text-black","border-transparent");
+      }
+    }
+
+    // ------------------------------
+    // Views + Drawer
+    // ------------------------------
+    function setView(view) {
+      state.view = view;
+      saveState();
+      if (view === "settings") {
+        viewWrite.classList.add("hidden");
+        viewSettings.classList.remove("hidden");
+      } else {
+        viewSettings.classList.add("hidden");
+        viewWrite.classList.remove("hidden");
+      }
+    }
+
+    function openDrawer() {
+      overlay.classList.remove("hidden");
+      drawer.classList.remove("translate-x-full");
+      drawer.setAttribute("aria-hidden","false");
+      renderEssayList();
+      searchEl.focus();
+    }
+
+    function closeDrawer() {
+      drawer.classList.add("translate-x-full");
+      overlay.classList.add("hidden");
+      drawer.setAttribute("aria-hidden","true");
+    }
+
+    // ------------------------------
+    // Toast
+    // ------------------------------
+    let toastT = null;
+    function toast(msg) {
+      toastMsg.textContent = msg;
+      toastEl.classList.remove("hidden");
+      clearTimeout(toastT);
+      toastT = setTimeout(() => toastEl.classList.add("hidden"), 1400);
+    }
+
+    // ------------------------------
+    // Actions
+    // ------------------------------
+    function newEssay() {
+      // Save current first (if any content)
+      doSave();
+      state.currentId = null;
+      titleEl.value = "";
+      bodyEl.value = "";
+      // Keep selectors as-is (feels nicer)
+      autosaveStatus.textContent = "Autosave: ready";
+      setMeta(null);
+      saveState();
+      renderEssayList();
+      if (state.mode === "reader") renderReader();
+      toast("New essay ready");
+    }
+
+    function loadEssay(id) {
+      const e = state.essays.find(x => x.id === id);
+      if (!e) return;
+
+      state.currentId = id;
+      titleEl.value = e.title || "";
+      bodyEl.value = e.body || "";
+      essayType.value = e.type || "explanatory";
+      structure.value = e.structure || "problem-evidence-solution";
+      renderStructureHelp();
+      setMeta(e);
+      saveState();
+      if (state.mode === "reader") renderReader();
+      toast("Loaded");
+    }
+
+    function deleteEssay(id) {
+      const idx = state.essays.findIndex(e => e.id === id);
+      if (idx === -1) return;
+      const wasCurrent = state.currentId === id;
+      state.essays.splice(idx, 1);
+      if (wasCurrent) {
+        state.currentId = null;
+        titleEl.value = "";
+        bodyEl.value = "";
+        setMeta(null);
+      }
+      saveState();
+      renderEssayList();
+      toast("Deleted");
+    }
+
+    function chooseRandomEssay() {
+      if (state.essays.length === 0) {
+        toast("No saved essays yet");
+        return;
+      }
+      const pick = state.essays[Math.floor(Math.random() * state.essays.length)];
+      loadEssay(pick.id);
+    }
+
+    // ------------------------------
+    // Events
+    // ------------------------------
+    navWrite.addEventListener("click", () => { setView("write"); closeDrawer(); });
+    navSettings.addEventListener("click", () => { setView("settings"); closeDrawer(); });
+    navEssays.addEventListener("click", () => openDrawer());
+
+    overlay.addEventListener("click", closeDrawer);
+    drawerClose.addEventListener("click", closeDrawer);
+
+    drawerNew.addEventListener("click", () => { newEssay(); closeDrawer(); setView("write"); });
+
+    searchEl.addEventListener("input", renderEssayList);
+
+    essayList.addEventListener("click", (e) => {
+      const openBtn = e.target.closest("[data-open]");
+      const delBtn = e.target.closest("[data-delete]");
+      if (openBtn) {
+        loadEssay(openBtn.getAttribute("data-open"));
+        closeDrawer();
+        setView("write");
+      }
+      if (delBtn) {
+        const id = delBtn.getAttribute("data-delete");
+        // quick confirm without modal
+        if (confirm("Delete this essay?")) deleteEssay(id);
+      }
+    });
+
+    btnRandom.addEventListener("click", chooseRandomEssay);
+
+    btnNew.addEventListener("click", newEssay);
+
+    btnEditor.addEventListener("click", () => setMode("editor"));
+    btnReader.addEventListener("click", () => setMode("reader"));
+
+    btnCopy.addEventListener("click", async () => {
+      const text = bodyEl.value || "";
+      if (!text.trim()) return toast("Nothing to copy");
+      try {
+        await navigator.clipboard.writeText(text);
+        toast("Copied");
+      } catch {
+        toast("Copy failed");
+      }
+    });
+
+    btnDelete.addEventListener("click", () => {
+      const e = getCurrentEssay();
+      if (!e) {
+        titleEl.value = "";
+        bodyEl.value = "";
+        toast("Cleared");
+        return;
+      }
+      if (!confirm("Delete the currently loaded essay?")) return;
+      deleteEssay(e.id);
+    });
+
+    // Autosave triggers
+    [titleEl, bodyEl].forEach(el => el.addEventListener("input", scheduleSave));
+    essayType.addEventListener("change", () => { scheduleSave(); });
+    structure.addEventListener("change", () => { renderStructureHelp(); scheduleSave(); });
+
+    // Theme
+    themeDark.addEventListener("click", () => applyTheme("monokaiDark"));
+    themeLight.addEventListener("click", () => applyTheme("monokaiLight"));
+
+    // Export / Import / Wipe
+    btnExport.addEventListener("click", () => {
+      const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "one-paragraph-essays.json";
+      a.click();
+      URL.revokeObjectURL(url);
+      toast("Exported");
+    });
+
+    importFile.addEventListener("change", async () => {
+      const file = importFile.files && importFile.files[0];
+      if (!file) return;
+      try {
+        const text = await file.text();
+        const parsed = JSON.parse(text);
+        if (!parsed || !Array.isArray(parsed.essays)) throw new Error("Invalid");
+        state = {
+          essays: parsed.essays,
+          currentId: parsed.currentId ?? null,
+          untitledCounter: parsed.untitledCounter ?? 1,
+          view: "write",
+          mode: state.mode // keep current mode
+        };
+        saveState();
+        renderEssayList();
+        const cur = getCurrentEssay();
+        if (cur) loadEssay(cur.id);
+        toast("Imported");
+      } catch {
+        toast("Import failed");
+      } finally {
+        importFile.value = "";
+      }
+    });
+
+    btnWipe.addEventListener("click", () => {
+      if (!confirm("Wipe all saved essays and settings from this browser?")) return;
+      localStorage.removeItem(STORAGE_KEY);
+      // keep theme choice? you asked wipe all local data -> wipe theme too
+      localStorage.removeItem(THEME_KEY);
+      state = { essays: [], currentId: null, untitledCounter: 1, view: "write", mode: "editor" };
+      loadTheme(); // re-applies default if theme removed
+      saveState();
+      titleEl.value = "";
+      bodyEl.value = "";
+      setMode("editor");
+      setView("write");
+      renderEssayList();
+      renderStructureHelp();
+      setMeta(null);
+      toast("Wiped");
+    });
+
+    // Keyboard shortcut: Ctrl/Cmd+K opens drawer
+    window.addEventListener("keydown", (e) => {
+      const isMac = navigator.platform.toLowerCase().includes("mac");
+      const mod = isMac ? e.metaKey : e.ctrlKey;
+      if (mod && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        openDrawer();
+      }
+      if (e.key === "Escape") closeDrawer();
+    });
+
+    // ------------------------------
+    // Init
+    // ------------------------------
+    function escapeHtml(s) {
+      return String(s)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+
+    // first render
+    renderStructureHelp();
+    setView(state.view);
+    setMode(state.mode);
+
+    // load current essay if any
+    if (state.currentId) {
+      const e = getCurrentEssay();
+      if (e) loadEssay(e.id);
+      else state.currentId = null;
+    } else {
+      setMeta(null);
+      renderEssayList();
+    }
+
+    // Ensure select help text matches
+    essayType.value = essayType.value || "explanatory";
+  </script>
+</body>
+</html>
