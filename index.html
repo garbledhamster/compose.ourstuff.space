@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>One-Paragraph Essay Tool</title>
+  <title>Ourstuff.Space - Essays</title>
 
   <!-- Font -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -14,15 +14,11 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: { sans: ["Inter", "ui-sans-serif", "system-ui"] }
-        }
-      }
+      theme: { extend: { fontFamily: { sans: ["Inter", "ui-sans-serif", "system-ui"] } } }
     }
   </script>
 
-  <!-- Markdown renderer + sanitizer (for Reader Mode) -->
+  <!-- Markdown renderer + sanitizer (Reader Mode) -->
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
 
@@ -43,18 +39,21 @@
 
       --shadow: 0 16px 40px rgba(0,0,0,.35);
       --shadowSoft: 0 10px 22px rgba(0,0,0,.24);
+
+      /* Mid-round edges */
+      --r1: 10px;
+      --r2: 12px;
+      --r3: 14px;
     }
 
     html, body { height: 100%; }
     body { background: var(--bg); color: var(--text); font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
 
-    /* Subtle scrollbars */
     * { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
     *::-webkit-scrollbar { height: 10px; width: 10px; }
     *::-webkit-scrollbar-thumb { background: var(--border); border-radius: 999px; }
     *::-webkit-scrollbar-track { background: transparent; }
 
-    /* Tooltip */
     .tip { position: relative; }
     .tip::after {
       content: attr(data-tip);
@@ -66,13 +65,14 @@
       color: var(--text);
       border: 1px solid var(--border);
       padding: 8px 10px;
-      border-radius: 12px;
+      border-radius: var(--r2);
       font-size: 12px;
       white-space: nowrap;
       box-shadow: var(--shadowSoft);
       opacity: 0;
       pointer-events: none;
       transition: opacity .12s ease, transform .12s ease;
+      z-index: 90;
     }
     .tip:hover::after { opacity: 1; transform: translateX(-50%) translateY(-2px); }
 
@@ -94,17 +94,217 @@
       background: color-mix(in srgb, var(--surface2) 70%, transparent);
       border: 1px solid var(--border);
       padding: 2px 6px;
-      border-radius: 10px;
+      border-radius: var(--r1);
       font-size: 0.92em;
     }
     .md pre {
       background: color-mix(in srgb, var(--surface2) 70%, transparent);
       border: 1px solid var(--border);
-      border-radius: 16px;
+      border-radius: var(--r2);
       padding: 12px;
       overflow: auto;
       margin: 0.9rem 0;
     }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text);
+      user-select: none;
+    }
+    .chip-btn {
+      cursor: pointer;
+      transition: filter .12s ease, transform .12s ease, background .12s ease;
+      text-decoration: none;
+    }
+    .chip-btn:hover { filter: brightness(1.12); transform: translateY(-1px); }
+
+    .md a.oe-link {
+      color: var(--primary2);
+      text-decoration: none;
+      border-bottom: 1px dashed color-mix(in srgb, var(--primary2) 60%, transparent);
+    }
+    .md a.oe-link:hover {
+      border-bottom-style: solid;
+      filter: brightness(1.1);
+    }
+
+    /* Autocomplete popup */
+    #ac {
+      position: fixed;
+      z-index: 70;
+      width: min(420px, calc(100vw - 24px));
+      max-height: 240px;
+      overflow: auto;
+      border: 1px solid var(--border);
+      background: color-mix(in srgb, var(--surface) 92%, transparent);
+      backdrop-filter: blur(10px);
+      box-shadow: var(--shadow);
+      border-radius: var(--r2);
+      display: none;
+    }
+    #ac .ac-head {
+      position: sticky;
+      top: 0;
+      background: color-mix(in srgb, var(--surface2) 85%, transparent);
+      border-bottom: 1px solid var(--border);
+      padding: 8px 10px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+    #ac .ac-item {
+      width: 100%;
+      text-align: left;
+      padding: 10px 10px;
+      border-bottom: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+      font-size: 13px;
+      line-height: 1.2;
+      background: transparent;
+      cursor: pointer;
+    }
+    #ac .ac-item:last-child { border-bottom: none; }
+    #ac .ac-item:hover { background: color-mix(in srgb, var(--surface2) 70%, transparent); }
+    #ac .ac-item.active { background: color-mix(in srgb, var(--primary2) 22%, transparent); }
+    #ac .ac-sub {
+      display: block;
+      margin-top: 4px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+    #ac kbd {
+      border: 1px solid var(--border);
+      background: var(--bg);
+      border-radius: 6px;
+      padding: 1px 6px;
+      font-size: 10px;
+      color: var(--muted);
+      margin-left: 6px;
+    }
+
+    /* MAIN progress tracker (single track) */
+    .pbar-wrap {
+      border: 1px solid var(--border);
+      background: var(--bg);
+      padding: 12px;
+      border-radius: var(--r3);
+    }
+    .pbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .pseg {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      padding: 9px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 900;
+      line-height: 1;
+      user-select: none;
+      cursor: pointer;
+      transition: filter .12s ease, transform .12s ease, background .12s ease;
+    }
+    .pseg:hover { filter: brightness(1.10); transform: translateY(-1px); }
+    .pseg.active {
+      background: var(--primary);
+      color: #000;
+      border-color: transparent;
+    }
+    .pseg .dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: transparent;
+      flex: 0 0 auto;
+    }
+    .pseg.has .dot { background: var(--primary2); border-color: transparent; }
+    .pseg.active .dot { background: #000; border-color: transparent; }
+    .pseg .wc {
+      font-size: 11px;
+      font-weight: 800;
+      opacity: .85;
+      white-space: nowrap;
+    }
+    .pseg .del {
+      position: absolute;
+      right: 6px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 22px;
+      height: 22px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: color-mix(in srgb, var(--bg) 70%, transparent);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      line-height: 1;
+      cursor: pointer;
+      z-index: 2;
+    }
+    .pseg.rev:hover .del { display: inline-flex; }
+    .pseg.active .del { border-color: rgba(0,0,0,.25); }
+
+    /* Settings toggle */
+    .toggle {
+      width: 46px;
+      height: 24px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      position: relative;
+      padding: 0;
+      flex: 0 0 auto;
+      transition: filter .12s ease, background .12s ease, border-color .12s ease;
+    }
+    .toggle::before {
+      content: "";
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      background: var(--muted);
+      transition: transform .14s ease, background .14s ease;
+    }
+    .toggle.on {
+      background: var(--primary2);
+      border-color: transparent;
+    }
+    .toggle.on::before {
+      transform: translateX(22px);
+      background: var(--bg);
+    }
+
+    /* Drawer list actions */
+    .icon-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: var(--r2);
+      border: 1px solid var(--border);
+      background: var(--surface);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: filter .12s ease, transform .12s ease, background .12s ease;
+    }
+    .icon-btn:hover { filter: brightness(1.12); transform: translateY(-1px); background: var(--surface2); }
   </style>
 </head>
 
@@ -115,28 +315,38 @@
       <div class="mx-auto max-w-5xl px-4 py-3">
         <div class="flex items-center justify-between gap-3">
           <div class="flex items-center gap-3">
-            <div class="h-10 w-10 rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadowSoft)] grid place-items-center">
-              <!-- pen icon -->
+            <div class="h-10 w-10 border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadowSoft)] grid place-items-center"
+                 style="border-radius: var(--r3);">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <path d="M12 20h9" stroke="var(--muted)" stroke-width="2" stroke-linecap="round"/>
                 <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4 11.5-11.5Z" stroke="var(--primary2)" stroke-width="2" stroke-linejoin="round"/>
               </svg>
             </div>
             <div class="leading-tight">
-              <div class="text-sm font-semibold">One-Paragraph Essay Tool</div>
-              <div class="text-xs text-[var(--muted)]">Autosaves locally • Reader/Editor • Structures built-in</div>
+              <div class="text-sm font-semibold">Ourstuff.Space - Essays</div>
+              <div class="text-xs text-[var(--muted)]">Progress • Autosaves locally • Sources • [[links]] • #tags</div>
             </div>
           </div>
 
           <nav class="flex items-center gap-2">
-            <button id="navWrite" class="px-3 py-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface2)] transition text-sm font-semibold">
-              Write an Essay
-            </button>
-            <button id="navEssays" class="px-3 py-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface2)] transition text-sm font-semibold">
-              Essays
-            </button>
-            <button id="navSettings" class="px-3 py-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface2)] transition text-sm font-semibold">
-              Settings
+            <button id="navWrite" class="px-3 py-2 border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface2)] transition text-sm font-semibold"
+                    style="border-radius: var(--r2);">Write</button>
+            <button id="navEssays" class="px-3 py-2 border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface2)] transition text-sm font-semibold"
+                    style="border-radius: var(--r2);">Essays</button>
+            <button id="navSettings" class="px-3 py-2 border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface2)] transition text-sm font-semibold"
+                    style="border-radius: var(--r2);">Settings</button>
+
+            <!-- Random (far right) -->
+            <button id="navRandom" class="tip px-3 py-2 border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface2)] transition"
+                    style="border-radius: var(--r2);" data-tip="Random essay">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <rect x="4" y="4" width="16" height="16" rx="4" stroke="var(--text)" stroke-width="2"/>
+                <circle cx="8.5" cy="8.5" r="1.4" fill="var(--primary)"/>
+                <circle cx="15.5" cy="15.5" r="1.4" fill="var(--primary)"/>
+                <circle cx="15.5" cy="8.5" r="1.4" fill="var(--primary2)"/>
+                <circle cx="8.5" cy="15.5" r="1.4" fill="var(--primary2)"/>
+                <circle cx="12" cy="12" r="1.4" fill="var(--danger)"/>
+              </svg>
             </button>
           </nav>
         </div>
@@ -148,11 +358,12 @@
       <!-- WRITE VIEW -->
       <section id="viewWrite" class="space-y-5">
         <div class="grid gap-4 md:grid-cols-12">
-          <!-- Essay Type -->
           <div class="md:col-span-4">
             <label class="text-xs font-semibold text-[var(--muted)]">Essay type</label>
             <div class="mt-2">
-              <select id="essayType" class="w-full rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary2)]">
+              <select id="essayType"
+                      class="w-full border border-[var(--border)] bg-[var(--surface)] px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary2)]"
+                      style="border-radius: var(--r2);">
                 <option value="explanatory">Explanatory</option>
                 <option value="persuasive">Persuasive</option>
                 <option value="narrative">Narrative</option>
@@ -160,155 +371,258 @@
                 <option value="reflective">Reflective</option>
               </select>
             </div>
-            <p class="mt-2 text-xs text-[var(--muted)]">This mainly changes your mental target (explain vs argue vs tell a story).</p>
+            <p class="mt-2 text-xs text-[var(--muted)]">Autocomplete: type <span class="font-mono">[[</span> for links, <span class="font-mono">#</span> for tags.</p>
           </div>
 
-          <!-- Structure -->
-          <div class="md:col-span-5">
+          <div class="md:col-span-8">
             <label class="text-xs font-semibold text-[var(--muted)]">Structure</label>
-            <div class="mt-2 flex gap-2">
-              <select id="structure" class="flex-1 rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary2)]">
+            <div class="mt-2">
+              <select id="structure"
+                      class="w-full border border-[var(--border)] bg-[var(--surface)] px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary2)]"
+                      style="border-radius: var(--r2);">
                 <option value="problem-evidence-solution">Problem → Evidence → Solution</option>
                 <option value="story-lesson">Story → Lesson</option>
                 <option value="question-explanation-answer">Question → Explanation → Answer</option>
                 <option value="claim-objection-rebuttal">Claim → Objection → Rebuttal</option>
+                <option value="five-point">5 Point Structure</option>
               </select>
-
-              <button id="btnRandom" class="tip shrink-0 rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-3 py-3 hover:bg-[var(--surface2)] transition"
-                      data-tip="Choose a random note">
-                <!-- dice icon -->
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <rect x="4" y="4" width="16" height="16" rx="4" stroke="var(--text)" stroke-width="2"/>
-                  <circle cx="8.5" cy="8.5" r="1.4" fill="var(--primary)"/>
-                  <circle cx="15.5" cy="15.5" r="1.4" fill="var(--primary)"/>
-                  <circle cx="15.5" cy="8.5" r="1.4" fill="var(--primary2)"/>
-                  <circle cx="8.5" cy="15.5" r="1.4" fill="var(--primary2)"/>
-                  <circle cx="12" cy="12" r="1.4" fill="var(--danger)"/>
-                </svg>
-              </button>
             </div>
             <p id="structureHint" class="mt-2 text-xs text-[var(--muted)]"></p>
           </div>
-
-          <!-- Modes -->
-          <div class="md:col-span-3">
-            <label class="text-xs font-semibold text-[var(--muted)]">Mode</label>
-            <div class="mt-2 grid grid-cols-2 gap-2">
-              <button id="btnEditor" class="rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-3 py-3 text-sm font-semibold hover:bg-[var(--surface2)] transition">
-                Editor
-              </button>
-              <button id="btnReader" class="rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-3 py-3 text-sm font-semibold hover:bg-[var(--surface2)] transition">
-                Reader
-              </button>
-            </div>
-            <button id="btnNew" class="mt-2 w-full rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-3 py-3 text-sm font-semibold hover:bg-[var(--surface2)] transition">
-              New Essay
-            </button>
-          </div>
         </div>
 
-        <!-- Outline Helper -->
-        <div class="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadowSoft)]">
+        <!-- Blueprint -->
+        <div class="border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadowSoft)]"
+             style="border-radius: var(--r3);">
           <div class="flex items-center justify-between gap-3">
             <div>
-              <div class="text-sm font-extrabold">One-paragraph blueprint</div>
-              <div class="text-xs text-[var(--muted)]">Fill these beats inside your paragraph. Keep it tight.</div>
+              <div class="text-sm font-extrabold">Blueprint</div>
+              <div class="text-xs text-[var(--muted)]">Use structure beats as a checklist (sentence-level or paragraph-level).</div>
             </div>
             <div class="text-xs text-[var(--muted)]" id="autosaveStatus">Autosave: ready</div>
           </div>
-          <div class="mt-3 grid gap-3 md:grid-cols-12">
-            <div class="md:col-span-6">
-              <div class="text-xs font-semibold text-[var(--muted)]">Structure beats</div>
-              <div id="beats" class="mt-2 rounded-2xl border border-[var(--border)] bg-[var(--bg)] p-3 text-sm leading-relaxed"></div>
-            </div>
-            <div class="md:col-span-6">
-              <div class="text-xs font-semibold text-[var(--muted)]">Micro-checklist</div>
-              <div class="mt-2 rounded-2xl border border-[var(--border)] bg-[var(--bg)] p-3 text-sm leading-relaxed">
-                <ul class="list-disc pl-5 space-y-1 text-[var(--text)]">
-                  <li><span class="font-semibold">1 clear point</span> in the first sentence.</li>
-                  <li><span class="font-semibold">1 concrete example</span> (fact, detail, or mini-scene).</li>
-                  <li><span class="font-semibold">Explain why</span> the example proves the point.</li>
-                  <li><span class="font-semibold">End by landing</span> the idea (so what?).</li>
-                </ul>
-              </div>
-            </div>
+          <div class="mt-3">
+            <div class="text-xs font-semibold text-[var(--muted)]">Structure beats</div>
+            <div id="beats"
+                 class="mt-2 border border-[var(--border)] bg-[var(--bg)] p-3 text-sm leading-relaxed"
+                 style="border-radius: var(--r2);"></div>
           </div>
         </div>
 
-        <!-- Title + Writing Area -->
-        <div class="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow)]">
+        <!-- Writing Card -->
+        <div class="border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow)]"
+             style="border-radius: var(--r3);">
           <label class="text-xs font-semibold text-[var(--muted)]">Title</label>
           <input id="title"
-                 class="mt-2 w-full rounded-2xl border border-[var(--border)] bg-[var(--bg)] px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary2)]"
+                 class="mt-2 w-full border border-[var(--border)] bg-[var(--bg)] px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary2)]"
+                 style="border-radius: var(--r2);"
                  placeholder="Give it a name (optional)..." />
 
-          <div class="mt-4 flex items-center justify-between gap-3">
-            <label class="text-xs font-semibold text-[var(--muted)]">Write (autosaves as you type)</label>
+          <!-- Progress (single main track) -->
+          <div class="mt-4 pbar-wrap">
+            <div class="flex items-center justify-between gap-2">
+              <div>
+                <div class="text-xs font-extrabold">Progress</div>
+                <div id="progressHint" class="text-[11px] text-[var(--muted)] mt-1">
+                  Click a stage to switch. Moving forward copies your latest stage into the next stage (if it’s empty).
+                </div>
+              </div>
+              <button id="btnAddRevision"
+                      class="px-3 py-2 text-xs font-extrabold border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface2)] transition"
+                      style="border-radius: var(--r2);">
+                + Revision
+              </button>
+            </div>
+
+            <div id="progressBar" class="pbar" aria-label="Progress tracker"></div>
+          </div>
+
+          <!-- Writer navbar -->
+          <div class="mt-4 border border-[var(--border)] bg-[var(--bg)] px-2 py-2 flex items-center justify-between gap-2"
+               style="border-radius: var(--r2);">
+            <div class="flex items-center gap-2 flex-wrap">
+              <button id="tabWriter" class="px-3 py-2 text-sm font-semibold border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface2)] transition"
+                      style="border-radius: var(--r2);">Writer</button>
+              <button id="tabReader" class="px-3 py-2 text-sm font-semibold border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface2)] transition"
+                      style="border-radius: var(--r2);">Reader</button>
+              <button id="tabOutline" class="px-3 py-2 text-sm font-semibold border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface2)] transition"
+                      style="border-radius: var(--r2);">Outline</button>
+              <button id="tabNotes" class="px-3 py-2 text-sm font-semibold border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface2)] transition"
+                      style="border-radius: var(--r2);">Notes</button>
+              <button id="tabMeta" class="px-3 py-2 text-sm font-semibold border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface2)] transition"
+                      style="border-radius: var(--r2);">Links & Tags</button>
+            </div>
 
             <div class="flex items-center gap-2">
-              <button id="btnCopy" class="rounded-2xl border border-[var(--border)] bg-[var(--bg)] px-3 py-2 text-xs font-semibold hover:bg-[var(--surface2)] transition">
-                Copy
-              </button>
-              <button id="btnDelete" class="rounded-2xl border border-[var(--border)] bg-[var(--bg)] px-3 py-2 text-xs font-semibold hover:bg-[var(--surface2)] transition">
-                Delete
-              </button>
+              <button id="btnNew"
+                      class="px-3 py-2 text-sm font-extrabold bg-[var(--primary)] text-black hover:brightness-110 transition"
+                      style="border-radius: var(--r2);">New Essay</button>
             </div>
           </div>
 
-          <!-- Editor -->
-          <textarea id="body"
-                    class="mt-2 min-h-[280px] w-full rounded-2xl border border-[var(--border)] bg-[var(--bg)] px-4 py-3 text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-[var(--primary2)]"
-                    placeholder="Write your one paragraph here. Tip: start with the topic sentence, then prove it, then land it."></textarea>
+          <!-- Panels -->
+          <div class="mt-3" id="panelWriter">
+            <label class="text-xs font-semibold text-[var(--muted)]">Writer</label>
+            <textarea id="body"
+                      class="mt-2 min-h-[240px] w-full border border-[var(--border)] bg-[var(--bg)] px-4 py-3 text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-[var(--primary2)]"
+                      style="border-radius: var(--r2);"
+                      placeholder="Write here. Use [[links]] and #tags."></textarea>
+          </div>
+
+          <div class="mt-3 hidden" id="panelOutline">
+            <label class="text-xs font-semibold text-[var(--muted)]">Outline</label>
+            <textarea id="outline"
+                      class="mt-2 min-h-[200px] w-full border border-[var(--border)] bg-[var(--bg)] px-4 py-3 text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-[var(--primary2)]"
+                      style="border-radius: var(--r2);"
+                      placeholder="Outline mode (plain textarea for now). Use [[links]] and #tags."></textarea>
+          </div>
+
+          <div class="mt-3 hidden" id="panelNotes">
+            <label class="text-xs font-semibold text-[var(--muted)]">Notes</label>
+            <textarea id="notes"
+                      class="mt-2 min-h-[200px] w-full border border-[var(--border)] bg-[var(--bg)] px-4 py-3 text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-[var(--primary2)]"
+                      style="border-radius: var(--r2);"
+                      placeholder="Notes mode (plain textarea for now). Use [[links]] and #tags."></textarea>
+          </div>
+
+          <!-- Links & Tags panel (non-editable) -->
+          <div class="mt-3 hidden" id="panelMeta">
+            <div class="border border-[var(--border)] bg-[var(--bg)] px-4 py-3"
+                 style="border-radius: var(--r2);">
+              <div class="flex items-start justify-between gap-3">
+                <div>
+                  <div class="text-xs font-semibold text-[var(--muted)]">Links & Tags</div>
+                  <div class="mt-1 text-[11px] text-[var(--muted)]">Auto-detected across Writer / Outline / Notes / Sources (current stage).</div>
+                </div>
+                <div class="text-[11px] text-[var(--muted)]">Click chips to open.</div>
+              </div>
+
+              <div class="mt-3 grid gap-3 md:grid-cols-12">
+                <div class="md:col-span-6">
+                  <div class="text-xs font-semibold text-[var(--muted)]">Links</div>
+                  <div id="metaLinks"
+                       class="mt-2 border border-[var(--border)] bg-[var(--surface)] p-3"
+                       style="border-radius: var(--r2);"></div>
+                </div>
+                <div class="md:col-span-6">
+                  <div class="text-xs font-semibold text-[var(--muted)]">Tags</div>
+                  <div id="metaTags"
+                       class="mt-2 border border-[var(--border)] bg-[var(--surface)] p-3"
+                       style="border-radius: var(--r2);"></div>
+                </div>
+              </div>
+            </div>
+          </div>
 
           <!-- Reader -->
-          <div id="reader"
-               class="hidden mt-2 min-h-[280px] w-full rounded-2xl border border-[var(--border)] bg-[var(--bg)] px-4 py-3">
-            <div id="readerInner" class="md md:prose md:prose-invert max-w-none"></div>
+          <div class="mt-3 hidden" id="panelReader">
+            <div class="border border-[var(--border)] bg-[var(--bg)] px-4 py-3"
+                 style="border-radius: var(--r2);">
+              <div class="text-xs font-semibold text-[var(--muted)]">Preview</div>
+              <div id="readerInner" class="mt-2 md md:prose md:prose-invert max-w-none"></div>
+
+              <div class="mt-6 border-t border-[var(--border)] pt-4">
+                <div class="text-xs font-semibold text-[var(--muted)]">Sources</div>
+                <div id="readerSources" class="mt-2 md md:prose md:prose-invert max-w-none"></div>
+              </div>
+
+              <div class="mt-6 border-t border-[var(--border)] pt-4">
+                <div class="flex items-center justify-between gap-3">
+                  <div class="text-xs font-semibold text-[var(--muted)]">Links & Tags</div>
+                  <div class="text-[11px] text-[var(--muted)]">Clickable</div>
+                </div>
+                <div class="mt-3 grid gap-3 md:grid-cols-12">
+                  <div class="md:col-span-6">
+                    <div class="text-[11px] text-[var(--muted)]">Links</div>
+                    <div id="readerMetaLinks"
+                         class="mt-2 border border-[var(--border)] bg-[var(--surface)] p-3"
+                         style="border-radius: var(--r2);"></div>
+                  </div>
+                  <div class="md:col-span-6">
+                    <div class="text-[11px] text-[var(--muted)]">Tags</div>
+                    <div id="readerMetaTags"
+                         class="mt-2 border border-[var(--border)] bg-[var(--surface)] p-3"
+                         style="border-radius: var(--r2);"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sources (always part of stage) -->
+          <div class="mt-4">
+            <div class="flex items-center justify-between gap-3">
+              <label class="text-xs font-semibold text-[var(--muted)]">Sources (saved with this stage)</label>
+              <div class="text-[11px] text-[var(--muted)]">Tip: one source per line</div>
+            </div>
+            <textarea id="sources"
+                      class="mt-2 min-h-[110px] w-full border border-[var(--border)] bg-[var(--bg)] px-4 py-3 text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-[var(--primary2)]"
+                      style="border-radius: var(--r2);"
+                      placeholder="Example:
+Author, Title, Publisher, Year
+https://example.com/article
+Book quote: “...” (p. 42)"></textarea>
           </div>
 
           <div class="mt-3 flex items-center justify-between text-xs text-[var(--muted)]">
             <div id="metaLine">Not saved yet.</div>
-            <div>
-              <span class="inline-flex items-center gap-2">
-                <span class="h-2 w-2 rounded-full bg-[var(--primary)]"></span>
-                Stored locally in your browser
-              </span>
-            </div>
+            <div id="metaRight" class="text-xs text-[var(--muted)]"></div>
           </div>
         </div>
       </section>
 
       <!-- SETTINGS VIEW -->
       <section id="viewSettings" class="hidden space-y-4">
-        <div class="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow)]">
+        <div class="border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow)]"
+             style="border-radius: var(--r3);">
           <div class="text-lg font-extrabold">Settings</div>
           <p class="mt-1 text-sm text-[var(--muted)]">Pick a theme. Everything is driven by CSS variables.</p>
 
+          <!-- Forced progression lock -->
+          <div class="mt-5 border border-[var(--border)] bg-[var(--bg)] p-4"
+               style="border-radius: var(--r2);">
+            <div class="flex items-center justify-between gap-3">
+              <div>
+                <div class="text-sm font-bold">Forced progression lock</div>
+                <div class="mt-1 text-xs text-[var(--muted)]">
+                  When enabled: you must move forward step-by-step, and each step must contain writing before you can advance.
+                </div>
+              </div>
+              <button id="toggleForcedLock" class="toggle" type="button" aria-pressed="true" title="Toggle forced progression lock"></button>
+            </div>
+          </div>
+
           <div class="mt-4 grid gap-3 md:grid-cols-2">
-            <button id="themeDark" class="rounded-3xl border border-[var(--border)] bg-[var(--bg)] p-4 text-left hover:bg-[var(--surface2)] transition">
+            <button id="themeDark"
+                    class="border border-[var(--border)] bg-[var(--bg)] p-4 text-left hover:bg-[var(--surface2)] transition"
+                    style="border-radius: var(--r3);">
               <div class="text-sm font-extrabold">Monokai Dark</div>
               <div class="mt-1 text-xs text-[var(--muted)]">Deep contrast, neon accents, easy on eyes.</div>
             </button>
 
-            <button id="themeLight" class="rounded-3xl border border-[var(--border)] bg-[var(--bg)] p-4 text-left hover:bg-[var(--surface2)] transition">
+            <button id="themeLight"
+                    class="border border-[var(--border)] bg-[var(--bg)] p-4 text-left hover:bg-[var(--surface2)] transition"
+                    style="border-radius: var(--r3);">
               <div class="text-sm font-extrabold">Monokai Light</div>
               <div class="mt-1 text-xs text-[var(--muted)]">Bright paper feel, Monokai-ish pop.</div>
             </button>
           </div>
 
-          <div class="mt-5 rounded-2xl border border-[var(--border)] bg-[var(--bg)] p-4">
+          <div class="mt-5 border border-[var(--border)] bg-[var(--bg)] p-4"
+               style="border-radius: var(--r2);">
             <div class="text-sm font-bold">Data controls</div>
             <div class="mt-2 flex flex-wrap gap-2">
-              <button id="btnExport" class="rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-xs font-semibold hover:bg-[var(--surface2)] transition">
-                Export JSON
-              </button>
-              <label class="rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-xs font-semibold hover:bg-[var(--surface2)] transition cursor-pointer">
+              <button id="btnExport"
+                      class="border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-xs font-semibold hover:bg-[var(--surface2)] transition"
+                      style="border-radius: var(--r2);">Export JSON</button>
+              <label class="border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-xs font-semibold hover:bg-[var(--surface2)] transition cursor-pointer"
+                     style="border-radius: var(--r2);">
                 Import JSON
                 <input id="importFile" type="file" accept="application/json" class="hidden" />
               </label>
-              <button id="btnWipe" class="rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-xs font-semibold hover:bg-[var(--surface2)] transition">
-                Wipe All Local Data
-              </button>
+              <button id="btnWipe"
+                      class="border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-xs font-semibold hover:bg-[var(--surface2)] transition"
+                      style="border-radius: var(--r2);">Wipe All Local Data</button>
             </div>
             <p class="mt-2 text-xs text-[var(--muted)]">Export/import is optional but handy when you switch devices.</p>
           </div>
@@ -320,16 +634,19 @@
     <div id="overlay" class="hidden fixed inset-0 z-40 bg-black/60"></div>
 
     <!-- Drawer -->
-    <aside id="drawer" class="fixed right-0 top-0 z-50 h-full w-[360px] max-w-[92vw] translate-x-full transition-transform duration-200"
+    <aside id="drawer"
+           class="fixed right-0 top-0 z-50 h-full w-[380px] max-w-[92vw] translate-x-full transition-transform duration-200"
            aria-hidden="true">
       <div class="h-full border-l border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow)] flex flex-col">
         <div class="px-4 py-4 border-b border-[var(--border)] flex items-center justify-between gap-3">
           <div>
             <div class="text-sm font-extrabold">Saved Essays</div>
-            <div class="text-xs text-[var(--muted)]">Tap one to load it.</div>
+            <div class="text-xs text-[var(--muted)]">Search by title, text, or #tag (search scans all stages)</div>
           </div>
-          <button id="drawerClose" class="rounded-2xl border border-[var(--border)] bg-[var(--bg)] p-2 hover:bg-[var(--surface2)] transition" aria-label="Close">
-            <!-- X icon -->
+          <button id="drawerClose"
+                  class="border border-[var(--border)] bg-[var(--bg)] p-2 hover:bg-[var(--surface2)] transition"
+                  style="border-radius: var(--r2);"
+                  aria-label="Close">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path d="M18 6 6 18M6 6l12 12" stroke="var(--text)" stroke-width="2" stroke-linecap="round"/>
             </svg>
@@ -337,23 +654,35 @@
         </div>
 
         <div class="p-3">
-          <input id="search" class="w-full rounded-2xl border border-[var(--border)] bg-[var(--bg)] px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary2)]"
-                 placeholder="Search titles..." />
+          <input id="search"
+                 class="w-full border border-[var(--border)] bg-[var(--bg)] px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary2)]"
+                 style="border-radius: var(--r2);"
+                 placeholder="Try: #sleep  or  motivation  or  [[Some Title]]" />
+          <div class="mt-2 text-[11px] text-[var(--muted)]">
+            Tip: multiple terms act like AND (e.g., <span class="font-mono">#sleep focus</span>)
+          </div>
         </div>
 
         <div id="essayList" class="flex-1 overflow-auto px-3 pb-4"></div>
 
         <div class="p-3 border-t border-[var(--border)]">
-          <button id="drawerNew" class="w-full rounded-2xl bg-[var(--primary)] text-black font-extrabold px-4 py-3 hover:brightness-110 transition">
-            New Essay
-          </button>
+          <button id="drawerNew"
+                  class="w-full bg-[var(--primary)] text-black font-extrabold px-4 py-3 hover:brightness-110 transition"
+                  style="border-radius: var(--r2);">New Essay</button>
         </div>
       </div>
     </aside>
 
+    <!-- Autocomplete popup -->
+    <div id="ac" role="listbox" aria-label="Autocomplete">
+      <div class="ac-head" id="acHead"></div>
+      <div id="acBody"></div>
+    </div>
+
     <!-- Toast -->
     <div id="toast" class="pointer-events-none fixed bottom-4 left-1/2 -translate-x-1/2 z-[60] hidden">
-      <div class="rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-sm shadow-[var(--shadowSoft)]">
+      <div class="border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-sm shadow-[var(--shadowSoft)]"
+           style="border-radius: var(--r2);">
         <span id="toastMsg"></span>
       </div>
     </div>
@@ -361,9 +690,132 @@
 
   <script>
     // ------------------------------
-    // State + Persistence
+    // Utilities
     // ------------------------------
-    const STORAGE_KEY = "oe_state_v1";
+    const $ = (id) => document.getElementById(id);
+
+    let toastT = null;
+    function toast(msg) {
+      const toastEl = $("toast");
+      const toastMsg = $("toastMsg");
+      toastMsg.textContent = msg;
+      toastEl.classList.remove("hidden");
+      clearTimeout(toastT);
+      toastT = setTimeout(() => toastEl.classList.add("hidden"), 1600);
+    }
+
+    function uid() {
+      return "e_" + Math.random().toString(16).slice(2) + "_" + Date.now().toString(16);
+    }
+    function nowIso() { return new Date().toISOString(); }
+
+    function escapeHtml(s) {
+      return String(s)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+
+    function wordCount(text) {
+      const t = (text || "").trim();
+      if (!t) return 0;
+      const m = t.match(/\S+/g);
+      return m ? m.length : 0;
+    }
+
+    function extractTags(text) {
+      const t = text || "";
+      const re = /(^|[\s(])#([a-zA-Z0-9_-]{1,40})\b/g;
+      const out = new Set();
+      let m;
+      while ((m = re.exec(t)) !== null) out.add(m[2].toLowerCase());
+      return Array.from(out);
+    }
+
+    function extractLinks(text) {
+      const t = text || "";
+      const re = /\[\[([^\]]+)\]\]/g;
+      const out = [];
+      let m;
+      while ((m = re.exec(t)) !== null) {
+        const target = String(m[1] || "").trim();
+        if (target) out.push(target);
+      }
+      const seen = new Set();
+      return out.filter(x => {
+        const k = x.toLowerCase();
+        if (seen.has(k)) return false;
+        seen.add(k);
+        return true;
+      });
+    }
+
+    function convertObsidianLinksToMarkdownLinks(raw) {
+      return (raw || "").replace(/\[\[([^\]]+)\]\]/g, (_, inner) => {
+        const label = String(inner || "").trim();
+        const href = "oe://" + encodeURIComponent(label);
+        return `[${label}](${href})`;
+      });
+    }
+
+    function isMobile() {
+      return window.matchMedia("(max-width: 767px)").matches;
+    }
+
+    function signatureOfDraft(d) {
+      const s = [
+        (d?.body || "").trim(),
+        (d?.outline || "").trim(),
+        (d?.notes || "").trim(),
+        (d?.sources || "").trim()
+      ].join("\n---\n");
+      return s;
+    }
+
+    // Caret positioning (for autocomplete)
+    function getCaretOffset(ta) {
+      const pos = ta.selectionStart;
+      const style = window.getComputedStyle(ta);
+
+      const div = document.createElement("div");
+      div.style.position = "fixed";
+      div.style.left = "-9999px";
+      div.style.top = "0";
+      div.style.whiteSpace = "pre-wrap";
+      div.style.wordWrap = "break-word";
+      div.style.overflow = "hidden";
+
+      const props = [
+        "boxSizing","width","height","paddingTop","paddingRight","paddingBottom","paddingLeft",
+        "borderTopWidth","borderRightWidth","borderBottomWidth","borderLeftWidth",
+        "fontFamily","fontSize","fontWeight","fontStyle","letterSpacing","textTransform",
+        "lineHeight","textAlign","tabSize"
+      ];
+      props.forEach(p => div.style[p] = style[p]);
+      div.style.width = ta.clientWidth + "px";
+
+      const before = ta.value.substring(0, pos);
+      div.textContent = before;
+
+      const span = document.createElement("span");
+      span.textContent = "\u200b";
+      div.appendChild(span);
+
+      document.body.appendChild(div);
+      const top = span.offsetTop - ta.scrollTop;
+      const left = span.offsetLeft - ta.scrollLeft;
+      const height = parseFloat(style.lineHeight) || 18;
+      document.body.removeChild(div);
+
+      return { top, left, height };
+    }
+
+    // ------------------------------
+    // Storage + Theme
+    // ------------------------------
+    const STORAGE_KEY = "oe_state_v5"; // bumped (progress tracker restored as single main bar)
     const THEME_KEY = "oe_theme_v1";
 
     const themes = {
@@ -401,78 +853,297 @@
       }
     };
 
-    function uid() {
-      return "e_" + Math.random().toString(16).slice(2) + "_" + Date.now().toString(16);
-    }
-
-    function nowIso() { return new Date().toISOString(); }
-
-    function loadState() {
-      try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (!raw) {
-          return { essays: [], currentId: null, untitledCounter: 1, view: "write", mode: "editor" };
-        }
-        const parsed = JSON.parse(raw);
-        // minimal validation
-        return {
-          essays: Array.isArray(parsed.essays) ? parsed.essays : [],
-          currentId: parsed.currentId ?? null,
-          untitledCounter: typeof parsed.untitledCounter === "number" ? parsed.untitledCounter : 1,
-          view: parsed.view === "settings" ? "settings" : "write",
-          mode: parsed.mode === "reader" ? "reader" : "editor"
-        };
-      } catch {
-        return { essays: [], currentId: null, untitledCounter: 1, view: "write", mode: "editor" };
-      }
-    }
-
-    function saveState() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    }
-
-    function applyTheme(themeKey) {
+    function applyTheme(themeKey, opts = { silent: false }) {
       const t = themes[themeKey] || themes.monokaiDark;
       for (const [k, v] of Object.entries(t.vars)) document.documentElement.style.setProperty(k, v);
       localStorage.setItem(THEME_KEY, themeKey);
-      toast(`Theme: ${t.name}`);
+      if (!opts.silent) toast(`Theme: ${t.name}`);
     }
-
     function loadTheme() {
       const key = localStorage.getItem(THEME_KEY) || "monokaiDark";
-      applyTheme(key);
+      applyTheme(key, { silent: true });
     }
 
     // ------------------------------
-    // UI Elements
+    // State
     // ------------------------------
-    const $ = (id) => document.getElementById(id);
+    function loadState() {
+      const tryKeys = [STORAGE_KEY, "oe_state_v4", "oe_state_v3", "oe_state_v2", "oe_state_v1"];
+      for (const k of tryKeys) {
+        try {
+          const raw = localStorage.getItem(k);
+          if (!raw) continue;
+          const parsed = JSON.parse(raw);
 
+          const s = {
+            essays: Array.isArray(parsed.essays) ? parsed.essays : [],
+            currentId: parsed.currentId ?? null,
+            untitledCounter: typeof parsed.untitledCounter === "number" ? parsed.untitledCounter : 1,
+            view: parsed.view === "settings" ? "settings" : "write",
+            panel: ["writer","reader","outline","notes","meta"].includes(parsed.panel) ? parsed.panel : "writer",
+            settings: {
+              forcedProgressLock: true,
+              ...(parsed.settings || {})
+            }
+          };
+          if (typeof s.settings.forcedProgressLock !== "boolean") s.settings.forcedProgressLock = true;
+          return s;
+        } catch {}
+      }
+      return { essays: [], currentId: null, untitledCounter: 1, view: "write", panel: "writer", settings: { forcedProgressLock: true } };
+    }
+    function saveState() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+
+    let state = loadState();
+    loadTheme();
+
+    let drawerExpandedId = null;
+
+    // ------------------------------
+    // Stage model (progress)
+    // ------------------------------
+    function blankDraft() {
+      return { body: "", outline: "", notes: "", sources: "", updatedAt: "" };
+    }
+
+    function stageLabelFromKey(key) {
+      if (key === "started") return "Started";
+      if (key === "inProgress") return "In-Progress";
+      if (key === "firstDraft") return "First Draft";
+      if (key === "finalDraft") return "Final Draft";
+      if (key.startsWith("rev")) {
+        const n = parseInt(key.slice(3), 10);
+        if (!Number.isNaN(n)) return `Revision ${n + 1}`;
+      }
+      return "Stage";
+    }
+
+    function stageShortFromKey(key) {
+      if (key === "started") return "Started";
+      if (key === "inProgress") return "In-Prog";
+      if (key === "firstDraft") return "Draft 1";
+      if (key === "finalDraft") return "Final";
+      if (key.startsWith("rev")) {
+        const n = parseInt(key.slice(3), 10);
+        if (!Number.isNaN(n)) return `Rev ${n + 1}`;
+      }
+      return "Stage";
+    }
+
+    function stageHasContent(d) {
+      if (!d) return false;
+      return Boolean((d.body || "").trim() || (d.outline || "").trim() || (d.notes || "").trim() || (d.sources || "").trim());
+    }
+
+    function ensureEssaySchema(e) {
+      if (!e) return;
+
+      // migrate older fields into progress if missing
+      if (!e.progress) {
+        const legacy = {
+          body: typeof e.body === "string" ? e.body : "",
+          outline: typeof e.outline === "string" ? e.outline : "",
+          notes: typeof e.notes === "string" ? e.notes : "",
+          sources: typeof e.sources === "string" ? e.sources : ""
+        };
+
+        e.progress = {
+          currentKey: (legacy.body || legacy.outline || legacy.notes || legacy.sources) ? "inProgress" : "started",
+          drafts: {
+            started: blankDraft(),
+            inProgress: { ...blankDraft(), ...legacy, updatedAt: e.updatedAt || "" },
+            firstDraft: blankDraft(),
+            finalDraft: blankDraft()
+          },
+          revisions: []
+        };
+      }
+
+      if (!e.progress.drafts) {
+        e.progress.drafts = { started: blankDraft(), inProgress: blankDraft(), firstDraft: blankDraft(), finalDraft: blankDraft() };
+      }
+      if (!e.progress.drafts.started) e.progress.drafts.started = blankDraft();
+      if (!e.progress.drafts.inProgress) e.progress.drafts.inProgress = blankDraft();
+      if (!e.progress.drafts.firstDraft) e.progress.drafts.firstDraft = blankDraft();
+      if (!e.progress.drafts.finalDraft) e.progress.drafts.finalDraft = blankDraft();
+
+      if (!Array.isArray(e.progress.revisions)) e.progress.revisions = [];
+
+      // if currentKey points into revisions, ensure the array exists up to that index
+      if (String(e.progress.currentKey || "").startsWith("rev")) {
+        const n = parseInt(String(e.progress.currentKey).slice(3), 10);
+        if (!Number.isNaN(n)) {
+          while (e.progress.revisions.length <= n) e.progress.revisions.push(blankDraft());
+        }
+      }
+
+      if (!["started","inProgress","firstDraft","finalDraft"].includes(e.progress.currentKey) && !String(e.progress.currentKey || "").startsWith("rev")) {
+        e.progress.currentKey = "started";
+      }
+
+      if (!Array.isArray(e.tags)) e.tags = [];
+      if (!Array.isArray(e.links)) e.links = [];
+    }
+
+    function getStageList(e) {
+      ensureEssaySchema(e);
+      const revCount = e?.progress?.revisions?.length || 0;
+      const stages = [
+        { key: "started", label: "Started" },
+        { key: "inProgress", label: "In-Progress" },
+        { key: "firstDraft", label: "First Draft" },
+      ];
+      for (let i = 0; i < revCount; i++) stages.push({ key: `rev${i}`, label: `Revision ${i + 1}` });
+      stages.push({ key: "finalDraft", label: "Final Draft" });
+      return stages;
+    }
+
+    function stageIndex(e, key) {
+      const list = getStageList(e);
+      return list.findIndex(s => s.key === key);
+    }
+
+    function getDraftByKey(e, key) {
+      ensureEssaySchema(e);
+      if (key === "started") return e.progress.drafts.started;
+      if (key === "inProgress") return e.progress.drafts.inProgress;
+      if (key === "firstDraft") return e.progress.drafts.firstDraft;
+      if (key === "finalDraft") return e.progress.drafts.finalDraft;
+      if (key.startsWith("rev")) {
+        const n = parseInt(key.slice(3), 10);
+        if (!Number.isNaN(n)) {
+          while (e.progress.revisions.length <= n) e.progress.revisions.push(blankDraft());
+          return e.progress.revisions[n];
+        }
+      }
+      return e.progress.drafts.started;
+    }
+
+    function getCurrentEssay() {
+      if (!state.currentId) return null;
+      const e = state.essays.find(x => x.id === state.currentId) || null;
+      if (e) ensureEssaySchema(e);
+      return e;
+    }
+
+    function normalizeTitle(essay) {
+      const t = (essay.title || "").trim();
+      return t.length ? t : (essay.untitledLabel || "Untitled");
+    }
+
+    function findEssayByTitle(title) {
+      const wanted = String(title || "").trim().toLowerCase();
+      if (!wanted) return null;
+      return state.essays.find(e => normalizeTitle(e).trim().toLowerCase() === wanted) || null;
+    }
+
+    function ensureEssayExists(forceCreate = false) {
+      let e = getCurrentEssay();
+      if (e) return e;
+
+      if (!forceCreate) return null;
+
+      const id = uid();
+      const untitled = `Untitled (${state.untitledCounter++})`;
+      e = {
+        id,
+        title: "",
+        untitledLabel: untitled,
+        type: $("essayType").value,
+        structure: $("structure").value,
+        createdAt: nowIso(),
+        updatedAt: nowIso(),
+        tags: [],
+        links: [],
+        progress: {
+          currentKey: "started",
+          drafts: {
+            started: blankDraft(),
+            inProgress: blankDraft(),
+            firstDraft: blankDraft(),
+            finalDraft: blankDraft()
+          },
+          revisions: []
+        }
+      };
+      state.essays.unshift(e);
+      state.currentId = id;
+      ensureEssaySchema(e);
+      return e;
+    }
+
+    function getAllTextAcrossEssay(e) {
+      ensureEssaySchema(e);
+      const parts = [];
+      const stages = getStageList(e);
+      for (const s of stages) {
+        const d = getDraftByKey(e, s.key);
+        parts.push(d.body || "", d.outline || "", d.notes || "", d.sources || "");
+      }
+      return parts.join("\n");
+    }
+
+    function recomputeDerivedAll(e) {
+      const all = getAllTextAcrossEssay(e);
+      e.tags = extractTags(all);
+      e.links = extractLinks(all);
+    }
+
+    function latestStageKeyWithContent(e) {
+      const list = getStageList(e);
+      for (let i = list.length - 1; i >= 0; i--) {
+        const d = getDraftByKey(e, list[i].key);
+        if (stageHasContent(d)) return list[i].key;
+      }
+      return e?.progress?.currentKey || "started";
+    }
+
+    // ------------------------------
+    // UI elements
+    // ------------------------------
     const navWrite = $("navWrite");
     const navEssays = $("navEssays");
     const navSettings = $("navSettings");
+    const navRandom = $("navRandom");
 
     const viewWrite = $("viewWrite");
     const viewSettings = $("viewSettings");
 
-    const essayType = $("essayType");
-    const structure = $("structure");
+    const essayTypeEl = $("essayType");
+    const structureEl = $("structure");
     const structureHint = $("structureHint");
     const beats = $("beats");
 
     const titleEl = $("title");
     const bodyEl = $("body");
-    const readerWrap = $("reader");
-    const readerInner = $("readerInner");
+    const outlineEl = $("outline");
+    const notesEl = $("notes");
+    const sourcesEl = $("sources");
 
-    const btnEditor = $("btnEditor");
-    const btnReader = $("btnReader");
-    const btnRandom = $("btnRandom");
+    const tabWriter = $("tabWriter");
+    const tabReader = $("tabReader");
+    const tabOutline = $("tabOutline");
+    const tabNotes = $("tabNotes");
+    const tabMeta = $("tabMeta");
+
+    const panelWriter = $("panelWriter");
+    const panelReader = $("panelReader");
+    const panelOutline = $("panelOutline");
+    const panelNotes = $("panelNotes");
+    const panelMeta = $("panelMeta");
+
+    const metaLinks = $("metaLinks");
+    const metaTags = $("metaTags");
+    const readerMetaLinks = $("readerMetaLinks");
+    const readerMetaTags = $("readerMetaTags");
+
+    const readerInner = $("readerInner");
+    const readerSources = $("readerSources");
+
     const btnNew = $("btnNew");
-    const btnCopy = $("btnCopy");
-    const btnDelete = $("btnDelete");
 
     const metaLine = $("metaLine");
+    const metaRight = $("metaRight");
     const autosaveStatus = $("autosaveStatus");
 
     const overlay = $("overlay");
@@ -487,12 +1158,18 @@
     const btnExport = $("btnExport");
     const importFile = $("importFile");
     const btnWipe = $("btnWipe");
+    const toggleForcedLock = $("toggleForcedLock");
 
-    const toastEl = $("toast");
-    const toastMsg = $("toastMsg");
+    const progressBar = $("progressBar");
+    const btnAddRevision = $("btnAddRevision");
+
+    // Autocomplete
+    const ac = $("ac");
+    const acHead = $("acHead");
+    const acBody = $("acBody");
 
     // ------------------------------
-    // Structure helpers
+    // Structures
     // ------------------------------
     const structureGuides = {
       "problem-evidence-solution": {
@@ -530,11 +1207,21 @@
           "Rebuttal: Explain why your claim still holds (use evidence).",
           "Landing: Close with a balanced, confident conclusion."
         ]
+      },
+      "five-point": {
+        hint: "Use when you want a 1–5 progression (each number can be 1 sentence OR 1 paragraph).",
+        beats: [
+          "1) Intro — set context; define the topic; what’s at stake.",
+          "2) Reasons for — strongest reasons in favor (1–3 bullets or sentences).",
+          "3) Reasons against — strongest counterpoints (be fair).",
+          "4) The crutch — your special/vital info + opinion (usually the longest).",
+          "5) Conclusion — tie together points 1–4 and land the takeaway."
+        ]
       }
     };
 
     function renderStructureHelp() {
-      const g = structureGuides[structure.value] || structureGuides["problem-evidence-solution"];
+      const g = structureGuides[structureEl.value] || structureGuides["problem-evidence-solution"];
       structureHint.textContent = g.hint;
       beats.innerHTML = `
         <ol class="list-decimal pl-5 space-y-1">
@@ -544,102 +1231,436 @@
     }
 
     // ------------------------------
-    // Essay management
+    // Links & Tags panel (current stage)
     // ------------------------------
-    let state = loadState();
-    loadTheme();
+    function renderLinksTagsUIFromDraft(draft) {
+      const all = `${draft?.body || ""}\n${draft?.outline || ""}\n${draft?.notes || ""}\n${draft?.sources || ""}`;
+      const links = extractLinks(all);
+      const tags = extractTags(all);
 
-    function getCurrentEssay() {
-      if (!state.currentId) return null;
-      return state.essays.find(e => e.id === state.currentId) || null;
+      const linksHtml = links.length
+        ? `<div class="flex flex-wrap gap-2">
+            ${links.map(l => {
+              const href = "oe://" + encodeURIComponent(l);
+              return `<a class="chip chip-btn" href="${href}">[[${escapeHtml(l)}]]</a>`;
+            }).join("")}
+           </div>`
+        : `<div class="text-sm text-[var(--muted)]">No links yet. Type <span class="font-mono">[[</span> to add one.</div>`;
+
+      const tagsHtml = tags.length
+        ? `<div class="flex flex-wrap gap-2">
+            ${tags.map(t => `<button type="button" class="chip chip-btn" data-tag="${escapeHtml(t)}">#${escapeHtml(t)}</button>`).join("")}
+           </div>`
+        : `<div class="text-sm text-[var(--muted)]">No tags yet. Type <span class="font-mono">#</span> to add one.</div>`;
+
+      metaLinks.innerHTML = linksHtml;
+      metaTags.innerHTML = tagsHtml;
+      readerMetaLinks.innerHTML = linksHtml;
+      readerMetaTags.innerHTML = tagsHtml;
     }
 
-    function ensureCurrentEssayExistsIfNeeded() {
-      const hasContent = (bodyEl.value || "").trim().length > 0;
-      const hasTitle = (titleEl.value || "").trim().length > 0;
-      if (!hasContent && !hasTitle) return null;
-
-      let essay = getCurrentEssay();
-      if (!essay) {
-        const id = uid();
-        const untitled = `Untitled (${state.untitledCounter++})`;
-        essay = {
-          id,
-          title: "",
-          untitledLabel: untitled,
-          type: essayType.value,
-          structure: structure.value,
-          body: "",
-          createdAt: nowIso(),
-          updatedAt: nowIso()
-        };
-        state.essays.unshift(essay);
-        state.currentId = id;
-      }
-      return essay;
+    function getEditorDraft() {
+      return {
+        body: bodyEl.value || "",
+        outline: outlineEl.value || "",
+        notes: notesEl.value || "",
+        sources: sourcesEl.value || ""
+      };
     }
 
-    function normalizeTitle(essay) {
-      const t = (essay.title || "").trim();
-      return t.length ? t : (essay.untitledLabel || "Untitled");
+    function refreshLinksTagsUI() {
+      renderLinksTagsUIFromDraft(getEditorDraft());
     }
 
-    function setMeta(essay) {
-      if (!essay) { metaLine.textContent = "Not saved yet."; return; }
-      const t = normalizeTitle(essay);
-      const updated = new Date(essay.updatedAt);
-      metaLine.textContent = `${t} • updated ${updated.toLocaleString()}`;
-    }
-
-    function renderEssayList() {
-      const q = (searchEl.value || "").trim().toLowerCase();
-      const filtered = state.essays.filter(e => normalizeTitle(e).toLowerCase().includes(q));
-
-      if (filtered.length === 0) {
-        essayList.innerHTML = `
-          <div class="mx-1 mt-2 rounded-2xl border border-[var(--border)] bg-[var(--bg)] p-4 text-sm text-[var(--muted)]">
-            No saved essays yet. Start typing and it will auto-save.
-          </div>
-        `;
+    // ------------------------------
+    // Progress UI + logic (single main bar)
+    // ------------------------------
+    function renderProgressUI() {
+      const e = getCurrentEssay();
+      if (!e) {
+        progressBar.innerHTML = `<span class="text-sm text-[var(--muted)]">No essay loaded.</span>`;
+        updateAddRevisionButton();
         return;
       }
 
-      essayList.innerHTML = filtered.map(e => {
-        const active = e.id === state.currentId;
-        const label = normalizeTitle(e);
-        const updated = new Date(e.updatedAt).toLocaleString();
+      const stages = getStageList(e);
+      const currentKey = e?.progress?.currentKey || "started";
+
+      progressBar.innerHTML = stages.map(s => {
+        const d = getDraftByKey(e, s.key);
+        const has = stageHasContent(d);
+        const wc = wordCount(d.body || "");
+        const active = s.key === currentKey;
+
+        // delete only for revisions index >= 1 (Revision 2+)
+        let delBtn = "";
+        let revClass = "";
+        if (s.key.startsWith("rev")) {
+          const n = parseInt(s.key.slice(3), 10);
+          revClass = "rev";
+          if (!Number.isNaN(n) && n >= 1) {
+            delBtn = `<button type="button" class="del" data-delrev="${n}" title="Delete this revision" aria-label="Delete revision">×</button>`;
+          }
+        }
+
         return `
-          <div class="mt-2 rounded-2xl border border-[var(--border)] ${active ? "bg-[var(--surface2)]" : "bg-[var(--bg)]"} p-3">
-            <button data-open="${e.id}" class="w-full text-left">
-              <div class="flex items-start justify-between gap-3">
-                <div>
-                  <div class="text-sm font-extrabold">${escapeHtml(label)}</div>
-                  <div class="mt-1 text-xs text-[var(--muted)]">${escapeHtml(e.type)} • ${escapeHtml(structureLabel(e.structure))}</div>
-                  <div class="mt-1 text-[11px] text-[var(--muted)]">Updated: ${escapeHtml(updated)}</div>
-                </div>
-                <span class="mt-1 inline-flex items-center rounded-full border border-[var(--border)] bg-[var(--surface)] px-2 py-1 text-[10px] font-semibold">
-                  Open
-                </span>
-              </div>
-            </button>
-            <div class="mt-2 flex gap-2">
-              <button data-delete="${e.id}" class="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-2 py-2 text-[11px] font-semibold hover:bg-[var(--surface2)] transition">
-                Delete
-              </button>
-            </div>
-          </div>
+          <button type="button"
+                  class="pseg ${revClass} ${active ? "active" : ""} ${has ? "has" : ""}"
+                  data-stage="${escapeHtml(s.key)}"
+                  title="${escapeHtml(stageLabelFromKey(s.key))}">
+            ${delBtn}
+            <span class="dot" aria-hidden="true"></span>
+            <span>${escapeHtml(stageShortFromKey(s.key))}</span>
+            <span class="wc">• ${wc}w</span>
+          </button>
         `;
       }).join("");
+
+      updateAddRevisionButton();
     }
 
-    function structureLabel(v) {
-      switch (v) {
-        case "problem-evidence-solution": return "Problem → Evidence → Solution";
-        case "story-lesson": return "Story → Lesson";
-        case "question-explanation-answer": return "Question → Explanation → Answer";
-        case "claim-objection-rebuttal": return "Claim → Objection → Rebuttal";
-        default: return "Structure";
+    function commitEditorsToCurrentStage(e, opts = { markUpdated: true }) {
+      ensureEssaySchema(e);
+      const key = e.progress.currentKey || "started";
+      const d = getDraftByKey(e, key);
+
+      d.body = bodyEl.value || "";
+      d.outline = outlineEl.value || "";
+      d.notes = notesEl.value || "";
+      d.sources = sourcesEl.value || "";
+      if (opts.markUpdated) d.updatedAt = nowIso();
+
+      e.updatedAt = nowIso();
+      recomputeDerivedAll(e);
+    }
+
+    function loadStageIntoEditors(e, key) {
+      ensureEssaySchema(e);
+      const d = getDraftByKey(e, key);
+
+      bodyEl.value = d.body || "";
+      outlineEl.value = d.outline || "";
+      notesEl.value = d.notes || "";
+      sourcesEl.value = d.sources || "";
+
+      refreshLinksTagsUI();
+      if (state.panel === "reader") renderReader();
+      updateAddRevisionButton();
+    }
+
+    function ensureProgressiveCopy(e, fromKey, toKey) {
+      const fromDraft = getDraftByKey(e, fromKey);
+      const toDraft = getDraftByKey(e, toKey);
+
+      // Only seed forward stage if it's empty (so we don't overwrite)
+      if (!stageHasContent(toDraft) && stageHasContent(fromDraft)) {
+        toDraft.body = fromDraft.body || "";
+        toDraft.outline = fromDraft.outline || "";
+        toDraft.notes = fromDraft.notes || "";
+        toDraft.sources = fromDraft.sources || "";
+        toDraft.updatedAt = nowIso();
       }
+    }
+
+    function switchStage(targetKey) {
+      const e = ensureEssayExists(true);
+      ensureEssaySchema(e);
+
+      const fromKey = e.progress.currentKey || "started";
+      const fromIdx = stageIndex(e, fromKey);
+      const toIdx = stageIndex(e, targetKey);
+
+      if (toIdx === -1) return toast("That stage doesn't exist yet.");
+
+      // Save what we're leaving
+      commitEditorsToCurrentStage(e, { markUpdated: true });
+
+      // Forward progression rules
+      if (toIdx > fromIdx) {
+        const lock = !!state.settings.forcedProgressLock;
+
+        if (lock) {
+          // Must go step-by-step forward
+          if (toIdx !== fromIdx + 1) {
+            toast("Forced progression lock: move step-by-step.");
+            saveState();
+            renderProgressUI();
+            setMeta(e);
+            return;
+          }
+
+          // Must write something in the previous step (the one you're leaving)
+          const leavingDraft = getDraftByKey(e, fromKey);
+          if (!stageHasContent(leavingDraft)) {
+            toast(`Write something in “${stageLabelFromKey(fromKey)}” before moving forward.`);
+            saveState();
+            renderProgressUI();
+            setMeta(e);
+            return;
+          }
+        }
+
+        // Progressive copy: seed the next stage with what you just wrote (if empty)
+        ensureProgressiveCopy(e, fromKey, targetKey);
+      }
+
+      // Switch + load
+      e.progress.currentKey = targetKey;
+      loadStageIntoEditors(e, targetKey);
+
+      saveState();
+      setMeta(e);
+      renderEssayList();
+      renderProgressUI();
+      toast(`Stage: ${stageLabelFromKey(targetKey)}`);
+    }
+
+    // + Revision rules:
+    // - If on firstDraft and no revisions exist: creates Revision 1 (rev0) copied from firstDraft.
+    // - If on latest revision: creates next revision copied from current revision.
+    // - Prevent spam: current stage must have content AND differ from previous stage.
+    function canAddRevision(e) {
+      if (!e) return false;
+      ensureEssaySchema(e);
+
+      const key = e.progress.currentKey || "started";
+
+      if (key === "firstDraft") {
+        if ((e.progress.revisions?.length || 0) !== 0) return false; // start revisions only once
+        const cur = getDraftByKey(e, "firstDraft");
+        return stageHasContent(cur);
+      }
+
+      if (!key.startsWith("rev")) return false;
+
+      const n = parseInt(key.slice(3), 10);
+      if (Number.isNaN(n)) return false;
+
+      const lastIndex = (e.progress.revisions?.length || 0) - 1;
+      if (n !== lastIndex) return false; // only from the latest revision
+
+      const cur = getDraftByKey(e, key);
+      if (!stageHasContent(cur)) return false;
+
+      const prevKey = (n === 0) ? "firstDraft" : `rev${n - 1}`;
+      const prev = getDraftByKey(e, prevKey);
+
+      return signatureOfDraft(cur) !== signatureOfDraft(prev);
+    }
+
+    function updateAddRevisionButton() {
+      const e = getCurrentEssay();
+      const ok = e ? canAddRevision(e) : false;
+
+      btnAddRevision.disabled = !ok;
+      btnAddRevision.classList.toggle("opacity-50", !ok);
+      btnAddRevision.classList.toggle("cursor-not-allowed", !ok);
+      btnAddRevision.classList.toggle("hover:bg-[var(--surface2)]", ok);
+
+      if (!e) return;
+
+      const key = e.progress.currentKey || "started";
+      if (key === "firstDraft" && (e.progress.revisions?.length || 0) === 0) {
+        btnAddRevision.title = ok ? "Create Revision 1 from First Draft." : "Write something in First Draft to start revisions.";
+        return;
+      }
+
+      if (!key.startsWith("rev")) {
+        btnAddRevision.title = "To add revisions: go to First Draft (with content) to create Revision 1.";
+        return;
+      }
+
+      if (!ok) {
+        btnAddRevision.title = "To add a new revision: write changes in this revision (different from the previous step).";
+      } else {
+        btnAddRevision.title = "Add a new revision (copies current revision into the new one).";
+      }
+    }
+
+    function addRevision() {
+      const e = ensureEssayExists(true);
+      ensureEssaySchema(e);
+
+      // Always save current stage first
+      commitEditorsToCurrentStage(e, { markUpdated: true });
+
+      if (!canAddRevision(e)) {
+        updateAddRevisionButton();
+        return toast("Can’t add a revision yet. Add content + make it different than the previous stage.");
+      }
+
+      const key = e.progress.currentKey || "started";
+
+      // Start revisions from firstDraft
+      if (key === "firstDraft") {
+        const src = getDraftByKey(e, "firstDraft");
+        const next = blankDraft();
+        next.body = src.body || "";
+        next.outline = src.outline || "";
+        next.notes = src.notes || "";
+        next.sources = src.sources || "";
+        next.updatedAt = nowIso();
+
+        e.progress.revisions = [next];
+        e.progress.currentKey = "rev0";
+        loadStageIntoEditors(e, "rev0");
+
+        saveState();
+        setMeta(e);
+        renderEssayList();
+        renderProgressUI();
+        toast("Created Revision 1");
+        return;
+      }
+
+      // Add next revision from latest revision
+      const n = parseInt(key.slice(3), 10);
+      const curDraft = getDraftByKey(e, key);
+
+      const next = blankDraft();
+      next.body = curDraft.body || "";
+      next.outline = curDraft.outline || "";
+      next.notes = curDraft.notes || "";
+      next.sources = curDraft.sources || "";
+      next.updatedAt = nowIso();
+
+      e.progress.revisions.push(next);
+
+      const newIndex = e.progress.revisions.length - 1;
+      const newKey = `rev${newIndex}`;
+      e.progress.currentKey = newKey;
+
+      loadStageIntoEditors(e, newKey);
+
+      saveState();
+      setMeta(e);
+      renderEssayList();
+      renderProgressUI();
+      toast(`Added ${stageLabelFromKey(newKey)}`);
+    }
+
+    function deleteRevision(revIndex) {
+      const e = getCurrentEssay();
+      if (!e) return;
+
+      ensureEssaySchema(e);
+
+      if (revIndex <= 0) return toast("Revision 1 cannot be deleted.");
+      if (!e.progress.revisions[revIndex]) return;
+
+      if (!confirm(`Delete Revision ${revIndex + 1}?`)) return;
+
+      e.progress.revisions.splice(revIndex, 1);
+
+      // Fix current key if needed
+      const key = e.progress.currentKey || "started";
+      if (key.startsWith("rev")) {
+        const n = parseInt(key.slice(3), 10);
+        if (!Number.isNaN(n)) {
+          if (n === revIndex) {
+            e.progress.currentKey = (revIndex - 1 >= 0) ? `rev${revIndex - 1}` : "firstDraft";
+          } else if (n > revIndex) {
+            e.progress.currentKey = `rev${n - 1}`;
+          }
+        }
+      }
+
+      // Ensure editors show the currentKey content
+      const curKey = e.progress.currentKey || "started";
+      loadStageIntoEditors(e, curKey);
+
+      e.updatedAt = nowIso();
+      recomputeDerivedAll(e);
+
+      saveState();
+      setMeta(e);
+      renderEssayList();
+      renderProgressUI();
+      toast(`Deleted Revision ${revIndex + 1}`);
+    }
+
+    // ------------------------------
+    // Reader
+    // ------------------------------
+    function renderReader() {
+      const bodyWithLinks = convertObsidianLinksToMarkdownLinks(bodyEl.value || "");
+      const srcWithLinks = convertObsidianLinksToMarkdownLinks(sourcesEl.value || "");
+
+      const bodyHtml = marked.parse(bodyWithLinks, { mangle: false, headerIds: false });
+      const srcHtml = marked.parse(srcWithLinks, { mangle: false, headerIds: false });
+
+      const cleanBody = DOMPurify.sanitize(bodyHtml, { USE_PROFILES: { html: true } });
+      const cleanSrc = DOMPurify.sanitize(srcHtml, { USE_PROFILES: { html: true } });
+
+      readerInner.innerHTML = cleanBody || `<p class="text-[var(--muted)]">Nothing to preview yet.</p>`;
+      readerSources.innerHTML = cleanSrc || `<p class="text-[var(--muted)]">No sources yet.</p>`;
+
+      document.querySelectorAll('a[href^="oe://"]').forEach(a => a.classList.add("oe-link"));
+
+      refreshLinksTagsUI();
+    }
+
+    // ------------------------------
+    // Panels
+    // ------------------------------
+    function setActiveTab(btn, active) {
+      if (active) btn.classList.add("bg-[var(--primary)]","text-black","border-transparent");
+      else btn.classList.remove("bg-[var(--primary)]","text-black","border-transparent");
+    }
+
+    function setPanel(panel) {
+      state.panel = panel;
+      saveState();
+
+      panelWriter.classList.toggle("hidden", panel !== "writer");
+      panelReader.classList.toggle("hidden", panel !== "reader");
+      panelOutline.classList.toggle("hidden", panel !== "outline");
+      panelNotes.classList.toggle("hidden", panel !== "notes");
+      panelMeta.classList.toggle("hidden", panel !== "meta");
+
+      setActiveTab(tabWriter, panel === "writer");
+      setActiveTab(tabReader, panel === "reader");
+      setActiveTab(tabOutline, panel === "outline");
+      setActiveTab(tabNotes, panel === "notes");
+      setActiveTab(tabMeta, panel === "meta");
+
+      if (panel === "reader") renderReader();
+      refreshLinksTagsUI();
+      updateAddRevisionButton();
+    }
+
+    // ------------------------------
+    // Views + Drawer
+    // ------------------------------
+    function setView(view) {
+      state.view = view;
+      saveState();
+      viewWrite.classList.toggle("hidden", view !== "write");
+      viewSettings.classList.toggle("hidden", view !== "settings");
+    }
+
+    function openDrawer() {
+      overlay.classList.remove("hidden");
+      drawer.classList.remove("translate-x-full");
+      drawer.setAttribute("aria-hidden","false");
+      drawerExpandedId = null;
+      renderEssayList();
+      searchEl.focus();
+    }
+
+    function closeDrawer() {
+      drawer.classList.add("translate-x-full");
+      overlay.classList.add("hidden");
+      drawer.setAttribute("aria-hidden","true");
+      drawerExpandedId = null;
+    }
+
+    function openDrawerWithTag(tag) {
+      setView("write");
+      openDrawer();
+      searchEl.value = "#" + String(tag || "").trim();
+      renderEssayList();
+      toast(`Filter: #${tag}`);
     }
 
     // ------------------------------
@@ -649,237 +1670,747 @@
     function scheduleSave() {
       autosaveStatus.textContent = "Autosave: typing…";
       clearTimeout(saveTimer);
-      saveTimer = setTimeout(() => {
-        doSave();
-      }, 200);
+      saveTimer = setTimeout(doSave, 220);
     }
 
     function doSave() {
-      const essay = ensureCurrentEssayExistsIfNeeded();
-      if (!essay) {
+      const e = ensureEssayExists(false);
+      if (!e) {
         autosaveStatus.textContent = "Autosave: ready";
-        setMeta(null);
         saveState();
         renderEssayList();
+        renderProgressUI();
+        refreshLinksTagsUI();
+        setMeta(null);
         return;
       }
 
-      essay.title = titleEl.value || "";
-      essay.type = essayType.value;
-      essay.structure = structure.value;
-      essay.body = bodyEl.value || "";
-      essay.updatedAt = nowIso();
+      e.title = titleEl.value || "";
+      e.type = essayTypeEl.value;
+      e.structure = structureEl.value;
+
+      // commit current stage from editors
+      commitEditorsToCurrentStage(e, { markUpdated: true });
 
       autosaveStatus.textContent = "Autosave: saved";
-      setMeta(essay);
       saveState();
+      setMeta(e);
       renderEssayList();
-
-      if (state.mode === "reader") renderReader();
+      renderProgressUI();
+      refreshLinksTagsUI();
+      if (state.panel === "reader") renderReader();
+      updateAddRevisionButton();
     }
 
     // ------------------------------
-    // Reader mode rendering
+    // Meta line
     // ------------------------------
-    function renderReader() {
-      const raw = bodyEl.value || "";
-      const html = marked.parse(raw, { mangle: false, headerIds: false });
-      const clean = DOMPurify.sanitize(html, { USE_PROFILES: { html: true } });
-      readerInner.innerHTML = clean || `<p class="text-[var(--muted)]">Nothing to preview yet.</p>`;
+    function setMeta(e) {
+      if (!e) {
+        metaLine.textContent = "Not saved yet.";
+        metaRight.textContent = "";
+        return;
+      }
+
+      const label = normalizeTitle(e);
+      const updated = new Date(e.updatedAt || Date.now());
+      const stage = e.progress?.currentKey || "started";
+      const draft = getDraftByKey(e, stage);
+      const wc = wordCount(draft.body || "");
+
+      metaLine.textContent = `${label} • updated ${updated.toLocaleString()}`;
+      metaRight.textContent = `${wc} words • stage: ${stageLabelFromKey(stage)} • ${e.tags.length} tags • ${e.links.length} links`;
     }
 
-    function setMode(mode) {
-      state.mode = mode;
-      saveState();
-
-      if (mode === "reader") {
-        bodyEl.classList.add("hidden");
-        readerWrap.classList.remove("hidden");
-        renderReader();
-        btnReader.classList.add("bg-[var(--primary)]","text-black","border-transparent");
-        btnEditor.classList.remove("bg-[var(--primary)]","text-black","border-transparent");
-      } else {
-        readerWrap.classList.add("hidden");
-        bodyEl.classList.remove("hidden");
-        btnEditor.classList.add("bg-[var(--primary)]","text-black","border-transparent");
-        btnReader.classList.remove("bg-[var(--primary)]","text-black","border-transparent");
+    // ------------------------------
+    // Essay list + search (scans all stages)
+    // ------------------------------
+    function structureLabel(v) {
+      switch (v) {
+        case "problem-evidence-solution": return "Problem → Evidence → Solution";
+        case "story-lesson": return "Story → Lesson";
+        case "question-explanation-answer": return "Question → Explanation → Answer";
+        case "claim-objection-rebuttal": return "Claim → Objection → Rebuttal";
+        case "five-point": return "5 Point Structure";
+        default: return "Structure";
       }
     }
 
-    // ------------------------------
-    // Views + Drawer
-    // ------------------------------
-    function setView(view) {
-      state.view = view;
-      saveState();
-      if (view === "settings") {
-        viewWrite.classList.add("hidden");
-        viewSettings.classList.remove("hidden");
-      } else {
-        viewSettings.classList.add("hidden");
-        viewWrite.classList.remove("hidden");
+    function tagsToChips(tags) {
+      const t = Array.isArray(tags) ? tags : [];
+      if (!t.length) return "";
+      return `<div class="mt-2 flex flex-wrap gap-2">
+        ${t.slice(0, 6).map(x => `<span class="chip">#${escapeHtml(x)}</span>`).join("")}
+        ${t.length > 6 ? `<span class="chip">+${t.length-6}</span>` : ""}
+      </div>`;
+    }
+
+    function matchesQuery(essay, q) {
+      const raw = (q || "").trim();
+      if (!raw) return true;
+      const tokens = raw.split(/\s+/g).filter(Boolean);
+
+      const title = normalizeTitle(essay).toLowerCase();
+      const allText = getAllTextAcrossEssay(essay).toLowerCase();
+      const tags = new Set((essay.tags || []).map(x => String(x).toLowerCase()));
+      const links = (essay.links || []).map(x => String(x).toLowerCase());
+
+      for (const tok of tokens) {
+        const t = tok.trim();
+        if (!t) continue;
+
+        if (t.startsWith("#")) {
+          const tag = t.slice(1).toLowerCase();
+          if (tag && !tags.has(tag)) return false;
+          continue;
+        }
+
+        if (t.startsWith("[[") && t.endsWith("]]") && t.length > 4) {
+          const inner = t.slice(2, -2).trim().toLowerCase();
+          if (!inner) continue;
+          const hasLink = links.some(x => x.includes(inner)) || title.includes(inner);
+          if (!hasLink) return false;
+          continue;
+        }
+
+        const needle = t.toLowerCase();
+        if (!title.includes(needle) && !allText.includes(needle)) return false;
       }
+      return true;
     }
 
-    function openDrawer() {
-      overlay.classList.remove("hidden");
-      drawer.classList.remove("translate-x-full");
-      drawer.setAttribute("aria-hidden","false");
-      renderEssayList();
-      searchEl.focus();
+    function iconTrash() {
+      return `
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M3 6h18" stroke="var(--text)" stroke-width="2" stroke-linecap="round"/>
+          <path d="M8 6V4h8v2" stroke="var(--text)" stroke-width="2" stroke-linecap="round"/>
+          <path d="M6 6l1 16h10l1-16" stroke="var(--text)" stroke-width="2" stroke-linejoin="round"/>
+          <path d="M10 11v7M14 11v7" stroke="var(--muted)" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      `;
     }
 
-    function closeDrawer() {
-      drawer.classList.add("translate-x-full");
-      overlay.classList.add("hidden");
-      drawer.setAttribute("aria-hidden","true");
+    function iconCopy() {
+      return `
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M9 9h10v10H9V9Z" stroke="var(--text)" stroke-width="2" stroke-linejoin="round"/>
+          <path d="M5 15H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1v1" stroke="var(--muted)" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      `;
     }
 
-    // ------------------------------
-    // Toast
-    // ------------------------------
-    let toastT = null;
-    function toast(msg) {
-      toastMsg.textContent = msg;
-      toastEl.classList.remove("hidden");
-      clearTimeout(toastT);
-      toastT = setTimeout(() => toastEl.classList.add("hidden"), 1400);
+    function renderEssayList() {
+      const q = (searchEl.value || "");
+      const filtered = state.essays.filter(e => {
+        ensureEssaySchema(e);
+        recomputeDerivedAll(e);
+        return matchesQuery(e, q);
+      });
+
+      if (filtered.length === 0) {
+        essayList.innerHTML = `
+          <div class="mx-1 mt-2 border border-[var(--border)] bg-[var(--bg)] p-4 text-sm text-[var(--muted)]"
+               style="border-radius: var(--r2);">
+            No matches. Try a broader term or a #tag.
+          </div>
+        `;
+        return;
+      }
+
+      const mobile = isMobile();
+
+      essayList.innerHTML = filtered.map(e => {
+        const active = e.id === state.currentId;
+        const label = normalizeTitle(e);
+        const updated = new Date(e.updatedAt || Date.now()).toLocaleString();
+
+        const stageKey = e.progress?.currentKey || "started";
+        const d = getDraftByKey(e, stageKey);
+        const wc = wordCount(d.body || "");
+        const stageLabel = stageLabelFromKey(stageKey);
+        const tagChips = tagsToChips(e.tags);
+
+        const expanded = mobile && drawerExpandedId === e.id;
+
+        return `
+          <div class="mt-2 border border-[var(--border)] ${active ? "bg-[var(--surface2)]" : "bg-[var(--bg)]"} p-3 relative group pb-14"
+               style="border-radius: var(--r2);">
+            <!-- Desktop hover actions (BOTTOM RIGHT now) -->
+            <div class="hidden md:flex gap-2 absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition">
+              <button class="icon-btn" type="button" data-copy="${e.id}" title="Copy">${iconCopy()}</button>
+              <button class="icon-btn" type="button" data-delete="${e.id}" title="Delete">${iconTrash()}</button>
+            </div>
+
+            <!-- Row -->
+            <div data-row="${e.id}" class="cursor-pointer select-none">
+              <div class="flex items-start justify-between gap-3">
+                <div class="min-w-0 pr-2">
+                  <div class="text-sm font-extrabold truncate">${escapeHtml(label)}</div>
+                  <div class="mt-1 text-xs text-[var(--muted)]">
+                    ${escapeHtml(e.type || "explanatory")} • ${escapeHtml(structureLabel(e.structure))} • <span class="font-semibold">${escapeHtml(stageLabel)}</span>
+                  </div>
+                  <div class="mt-1 text-[11px] text-[var(--muted)]">Updated: ${escapeHtml(updated)}</div>
+                  ${tagChips}
+                </div>
+                <div class="shrink-0 text-right">
+                  <div class="chip">${wc}w</div>
+                  <div class="mt-2 inline-flex items-center border border-[var(--border)] bg-[var(--surface)] px-2 py-1 text-[10px] font-semibold"
+                       style="border-radius: var(--r1);">
+                    ${mobile ? (expanded ? "Actions" : "Tap") : "Open"}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Mobile revealed actions -->
+            <div class="${expanded ? "" : "hidden"} md:hidden mt-3 border-t border-[var(--border)] pt-3">
+              <div class="flex gap-2">
+                <button type="button"
+                        class="flex-1 border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-xs font-extrabold hover:bg-[var(--surface2)] transition"
+                        style="border-radius: var(--r2);"
+                        data-openbtn="${e.id}">
+                  Open
+                </button>
+                <button type="button"
+                        class="border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-xs font-extrabold hover:bg-[var(--surface2)] transition flex items-center gap-2"
+                        style="border-radius: var(--r2);"
+                        data-copy="${e.id}">
+                  ${iconCopy()} <span class="hidden sm:inline">Copy</span>
+                </button>
+                <button type="button"
+                        class="border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-xs font-extrabold hover:bg-[var(--surface2)] transition flex items-center gap-2"
+                        style="border-radius: var(--r2);"
+                        data-delete="${e.id}">
+                  ${iconTrash()} <span class="hidden sm:inline">Delete</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join("");
     }
 
     // ------------------------------
     // Actions
     // ------------------------------
     function newEssay() {
-      // Save current first (if any content)
       doSave();
+
+      const e = ensureEssayExists(true);
+      // hard reset current to a fresh essay
       state.currentId = null;
       titleEl.value = "";
       bodyEl.value = "";
-      // Keep selectors as-is (feels nicer)
+      outlineEl.value = "";
+      notesEl.value = "";
+      sourcesEl.value = "";
+
       autosaveStatus.textContent = "Autosave: ready";
-      setMeta(null);
       saveState();
+
+      // Create and load a fresh one immediately (keeps progress bar always functional)
+      const fresh = ensureEssayExists(true);
+      renderStructureHelp();
+      loadStageIntoEditors(fresh, fresh.progress.currentKey || "started");
+      setMeta(fresh);
+
       renderEssayList();
-      if (state.mode === "reader") renderReader();
+      renderProgressUI();
+      refreshLinksTagsUI();
       toast("New essay ready");
+      updateAddRevisionButton();
     }
 
     function loadEssay(id) {
       const e = state.essays.find(x => x.id === id);
       if (!e) return;
+      ensureEssaySchema(e);
+      recomputeDerivedAll(e);
+
+      // save current before switching
+      const cur = getCurrentEssay();
+      if (cur && cur.id !== e.id) {
+        commitEditorsToCurrentStage(cur, { markUpdated: true });
+      }
 
       state.currentId = id;
+
       titleEl.value = e.title || "";
-      bodyEl.value = e.body || "";
-      essayType.value = e.type || "explanatory";
-      structure.value = e.structure || "problem-evidence-solution";
+      essayTypeEl.value = e.type || "explanatory";
+      structureEl.value = e.structure || "problem-evidence-solution";
       renderStructureHelp();
-      setMeta(e);
+
+      // load current stage
+      const key = e.progress.currentKey || "started";
+      loadStageIntoEditors(e, key);
+
       saveState();
-      if (state.mode === "reader") renderReader();
+      setMeta(e);
+      renderEssayList();
+      renderProgressUI();
+      refreshLinksTagsUI();
       toast("Loaded");
+      updateAddRevisionButton();
     }
 
     function deleteEssay(id) {
       const idx = state.essays.findIndex(e => e.id === id);
       if (idx === -1) return;
+
       const wasCurrent = state.currentId === id;
       state.essays.splice(idx, 1);
+
       if (wasCurrent) {
         state.currentId = null;
         titleEl.value = "";
         bodyEl.value = "";
+        outlineEl.value = "";
+        notesEl.value = "";
+        sourcesEl.value = "";
         setMeta(null);
       }
+
+      // Always keep an active essay so progress bar is always usable
+      if (!state.currentId) {
+        if (state.essays.length) state.currentId = state.essays[0].id;
+        else ensureEssayExists(true);
+      }
+
+      const cur = getCurrentEssay();
+      if (cur) {
+        titleEl.value = cur.title || "";
+        essayTypeEl.value = cur.type || "explanatory";
+        structureEl.value = cur.structure || "problem-evidence-solution";
+        renderStructureHelp();
+        loadStageIntoEditors(cur, cur.progress.currentKey || "started");
+        setMeta(cur);
+      }
+
       saveState();
       renderEssayList();
+      renderProgressUI();
+      refreshLinksTagsUI();
       toast("Deleted");
+      updateAddRevisionButton();
     }
 
-    function chooseRandomEssay() {
-      if (state.essays.length === 0) {
-        toast("No saved essays yet");
-        return;
-      }
-      const pick = state.essays[Math.floor(Math.random() * state.essays.length)];
-      loadEssay(pick.id);
-    }
+    async function copyEssay(id) {
+      const e = state.essays.find(x => x.id === id);
+      if (!e) return;
 
-    // ------------------------------
-    // Events
-    // ------------------------------
-    navWrite.addEventListener("click", () => { setView("write"); closeDrawer(); });
-    navSettings.addEventListener("click", () => { setView("settings"); closeDrawer(); });
-    navEssays.addEventListener("click", () => openDrawer());
+      ensureEssaySchema(e);
+      const key = latestStageKeyWithContent(e);
+      const d = getDraftByKey(e, key);
 
-    overlay.addEventListener("click", closeDrawer);
-    drawerClose.addEventListener("click", closeDrawer);
+      const title = normalizeTitle(e);
+      const body = (d.body || "").trim();
+      const sources = (d.sources || "").trim();
+      const header = `${title}\n(${stageLabelFromKey(key)})`;
 
-    drawerNew.addEventListener("click", () => { newEssay(); closeDrawer(); setView("write"); });
+      const text = [
+        header,
+        "",
+        body || "(empty)",
+        sources ? "\nSources:\n" + sources : ""
+      ].join("\n");
 
-    searchEl.addEventListener("input", renderEssayList);
-
-    essayList.addEventListener("click", (e) => {
-      const openBtn = e.target.closest("[data-open]");
-      const delBtn = e.target.closest("[data-delete]");
-      if (openBtn) {
-        loadEssay(openBtn.getAttribute("data-open"));
-        closeDrawer();
-        setView("write");
-      }
-      if (delBtn) {
-        const id = delBtn.getAttribute("data-delete");
-        // quick confirm without modal
-        if (confirm("Delete this essay?")) deleteEssay(id);
-      }
-    });
-
-    btnRandom.addEventListener("click", chooseRandomEssay);
-
-    btnNew.addEventListener("click", newEssay);
-
-    btnEditor.addEventListener("click", () => setMode("editor"));
-    btnReader.addEventListener("click", () => setMode("reader"));
-
-    btnCopy.addEventListener("click", async () => {
-      const text = bodyEl.value || "";
-      if (!text.trim()) return toast("Nothing to copy");
       try {
         await navigator.clipboard.writeText(text);
         toast("Copied");
       } catch {
         toast("Copy failed");
       }
-    });
+    }
 
-    btnDelete.addEventListener("click", () => {
-      const e = getCurrentEssay();
-      if (!e) {
-        titleEl.value = "";
-        bodyEl.value = "";
-        toast("Cleared");
+    function chooseRandomEssay() {
+      if (state.essays.length === 0) return toast("No saved essays yet");
+      const pick = state.essays[Math.floor(Math.random() * state.essays.length)];
+      loadEssay(pick.id);
+    }
+
+    // ------------------------------
+    // Autocomplete engine (links + tags)
+    // ------------------------------
+    const acState = {
+      open: false,
+      type: null, // "link" | "tag"
+      items: [],
+      index: 0,
+      ta: null,
+      start: 0,
+      end: 0,
+      query: ""
+    };
+
+    function closeAC() {
+      acState.open = false;
+      ac.style.display = "none";
+      acBody.innerHTML = "";
+      acHead.textContent = "";
+    }
+
+    function positionAC(ta) {
+      const rect = ta.getBoundingClientRect();
+      const caret = getCaretOffset(ta);
+
+      let x = rect.left + caret.left;
+      let y = rect.top + caret.top + caret.height + 8;
+
+      const pad = 12;
+      const w = Math.min(420, window.innerWidth - pad * 2);
+      ac.style.width = w + "px";
+
+      x = Math.max(pad, Math.min(x, window.innerWidth - w - pad));
+      const maxY = window.innerHeight - pad - 260;
+      y = Math.max(pad, Math.min(y, maxY));
+
+      ac.style.left = x + "px";
+      ac.style.top = y + "px";
+    }
+
+    function renderAC() {
+      const items = acState.items;
+      acBody.innerHTML = items.slice(0, 12).map((it, i) => {
+        const active = i === acState.index ? "active" : "";
+        const label = it.label ?? it;
+        const sub = it.sub ?? "";
+        return `<button type="button" class="ac-item ${active}" data-ac-idx="${i}">
+          ${escapeHtml(label)}
+          ${sub ? `<span class="ac-sub">${escapeHtml(sub)}</span>` : ``}
+        </button>`;
+      }).join("");
+    }
+
+    function showAC({ type, items, ta, start, end, query }) {
+      acState.open = true;
+      acState.type = type;
+      acState.items = items;
+      acState.index = 0;
+      acState.ta = ta;
+      acState.start = start;
+      acState.end = end;
+      acState.query = query;
+
+      const headText = type === "link"
+        ? `Link to essay  •  type: [[${query}  •  pick with ↑ ↓ Enter`
+        : `Tag  •  type: #${query}  •  pick with ↑ ↓ Enter`;
+      acHead.innerHTML = `${escapeHtml(headText)} <kbd>Esc</kbd>`;
+
+      renderAC();
+      positionAC(ta);
+      ac.style.display = items.length ? "block" : "none";
+    }
+
+    function getAllTitles() {
+      return state.essays.map(e => normalizeTitle(e)).filter(Boolean);
+    }
+
+    function getAllTags() {
+      const out = new Set();
+      state.essays.forEach(e => {
+        ensureEssaySchema(e);
+        recomputeDerivedAll(e);
+        (e.tags || []).forEach(t => out.add(String(t).toLowerCase()));
+      });
+      return Array.from(out).sort();
+    }
+
+    function insertCompletion(value) {
+      const ta = acState.ta;
+      if (!ta) return;
+      const full = ta.value;
+
+      const before = full.slice(0, acState.start);
+      const after = full.slice(acState.end);
+
+      let insertText = "";
+      if (acState.type === "link") insertText = `[[${value}]]`;
+      if (acState.type === "tag") insertText = `#${value}`;
+
+      ta.value = before + insertText + after;
+
+      const newPos = before.length + insertText.length;
+      ta.setSelectionRange(newPos, newPos);
+      ta.focus();
+
+      closeAC();
+      scheduleSave();
+      refreshLinksTagsUI();
+      updateAddRevisionButton();
+    }
+
+    function findLinkContext(ta) {
+      const pos = ta.selectionStart;
+      const before = ta.value.slice(0, pos);
+      const lastOpen = before.lastIndexOf("[[");
+      const lastClose = before.lastIndexOf("]]");
+      if (lastOpen === -1) return null;
+      if (lastOpen < lastClose) return null;
+
+      const query = before.slice(lastOpen + 2);
+      if (query.includes("\n")) return null;
+
+      let end = pos;
+      if (ta.value.slice(pos, pos + 2) === "]]") end = pos + 2;
+      return { start: lastOpen, end, query };
+    }
+
+    function findTagContext(ta) {
+      const pos = ta.selectionStart;
+      const before = ta.value.slice(0, pos);
+
+      const m = before.match(/(^|[\s(])#([a-zA-Z0-9_-]*)$/);
+      if (!m) return null;
+
+      const query = m[2] || "";
+      const start = pos - query.length - 1;
+
+      let end = pos;
+      while (end < ta.value.length && /[a-zA-Z0-9_-]/.test(ta.value[end])) end++;
+      return { start, end, query };
+    }
+
+    function maybeOpenAC(ta) {
+      const linkCtx = findLinkContext(ta);
+      if (linkCtx) {
+        const titles = getAllTitles();
+        const q = linkCtx.query.trim().toLowerCase();
+        const items = titles
+          .filter(t => !q || t.toLowerCase().includes(q))
+          .slice(0, 50)
+          .map(t => ({ label: t, sub: "essay" }));
+        showAC({ type: "link", items, ta, start: linkCtx.start, end: linkCtx.end, query: linkCtx.query });
         return;
       }
-      if (!confirm("Delete the currently loaded essay?")) return;
-      deleteEssay(e.id);
+
+      const tagCtx = findTagContext(ta);
+      if (tagCtx) {
+        const tags = getAllTags();
+        const q = tagCtx.query.trim().toLowerCase();
+        const items = tags
+          .filter(t => !q || t.includes(q))
+          .slice(0, 50)
+          .map(t => ({ label: `#${t}`, sub: "tag", value: t }));
+        showAC({
+          type: "tag",
+          items: items.map(x => ({ label: x.label, sub: x.sub, value: x.value })),
+          ta,
+          start: tagCtx.start,
+          end: tagCtx.end,
+          query: tagCtx.query
+        });
+        return;
+      }
+
+      closeAC();
+    }
+
+    function handleACKeydown(e) {
+      if (!acState.open) return false;
+
+      if (e.key === "Escape") { closeAC(); return true; }
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        acState.index = Math.min(acState.index + 1, Math.min(acState.items.length, 12) - 1);
+        renderAC();
+        return true;
+      }
+      if (e.key === "ArrowUp") {
+        e.preventDefault();
+        acState.index = Math.max(acState.index - 1, 0);
+        renderAC();
+        return true;
+      }
+      if (e.key === "Enter" || e.key === "Tab") {
+        e.preventDefault();
+        const item = acState.items[acState.index];
+        if (!item) return true;
+        const value = (acState.type === "tag") ? (item.value ?? String(item.label).replace(/^#/, "")) : (item.label ?? item);
+        insertCompletion(value);
+        return true;
+      }
+      return false;
+    }
+
+    ac.addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-ac-idx]");
+      if (!btn) return;
+      const idx = Number(btn.getAttribute("data-ac-idx"));
+      const item = acState.items[idx];
+      if (!item) return;
+      const value = (acState.type === "tag") ? (item.value ?? String(item.label).replace(/^#/, "")) : (item.label ?? item);
+      insertCompletion(value);
     });
 
-    // Autosave triggers
-    [titleEl, bodyEl].forEach(el => el.addEventListener("input", scheduleSave));
-    essayType.addEventListener("change", () => { scheduleSave(); });
-    structure.addEventListener("change", () => { renderStructureHelp(); scheduleSave(); });
+    window.addEventListener("resize", () => { if (acState.open && acState.ta) positionAC(acState.ta); });
+    window.addEventListener("scroll", () => { if (acState.open && acState.ta) positionAC(acState.ta); }, true);
 
-    // Theme
-    themeDark.addEventListener("click", () => applyTheme("monokaiDark"));
-    themeLight.addEventListener("click", () => applyTheme("monokaiLight"));
+    // ------------------------------
+    // Click handling: oe:// links, tag chips, tracker clicks, drawer actions
+    // ------------------------------
+    document.addEventListener("click", (e) => {
+      // Delete revision "x" in progress bar
+      const delRevBtn = e.target.closest("[data-delrev]");
+      if (delRevBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        const n = parseInt(delRevBtn.getAttribute("data-delrev"), 10);
+        if (!Number.isNaN(n)) deleteRevision(n);
+        return;
+      }
 
-    // Export / Import / Wipe
+      // Drawer action: copy
+      const copyBtn = e.target.closest("[data-copy]");
+      if (copyBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        copyEssay(copyBtn.getAttribute("data-copy"));
+        return;
+      }
+
+      // Drawer action: delete
+      const delBtn = e.target.closest("[data-delete]");
+      if (delBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        const id = delBtn.getAttribute("data-delete");
+        if (confirm("Delete this essay?")) deleteEssay(id);
+        return;
+      }
+
+      // Drawer mobile open button
+      const openBtn = e.target.closest("[data-openbtn]");
+      if (openBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        loadEssay(openBtn.getAttribute("data-openbtn"));
+        closeDrawer();
+        setView("write");
+        return;
+      }
+
+      // oe:// links
+      const a = e.target.closest('a[href^="oe://"]');
+      if (a) {
+        e.preventDefault();
+        const target = decodeURIComponent(a.getAttribute("href").slice("oe://".length));
+        const found = findEssayByTitle(target);
+        if (found) loadEssay(found.id);
+        else toast(`No essay found for [[${target}]]`);
+        return;
+      }
+
+      // tag chips
+      const tagBtn = e.target.closest("[data-tag]");
+      if (tagBtn) {
+        const tag = tagBtn.getAttribute("data-tag");
+        if (tag) openDrawerWithTag(tag);
+        return;
+      }
+
+      // progress bar segments
+      const seg = e.target.closest("[data-stage]");
+      if (seg) {
+        const key = seg.getAttribute("data-stage");
+        if (key) switchStage(key);
+        return;
+      }
+
+      // Drawer row click: desktop opens; mobile toggles actions
+      const row = e.target.closest("[data-row]");
+      if (row) {
+        const id = row.getAttribute("data-row");
+        if (!id) return;
+
+        if (isMobile()) {
+          drawerExpandedId = (drawerExpandedId === id) ? null : id;
+          renderEssayList();
+        } else {
+          loadEssay(id);
+          closeDrawer();
+          setView("write");
+        }
+        return;
+      }
+    });
+
+    // ------------------------------
+    // Views + Drawer events
+    // ------------------------------
+    navWrite.addEventListener("click", () => { setView("write"); closeDrawer(); });
+    navSettings.addEventListener("click", () => { setView("settings"); closeDrawer(); });
+    navEssays.addEventListener("click", () => openDrawer());
+    navRandom.addEventListener("click", () => chooseRandomEssay());
+
+    overlay.addEventListener("click", closeDrawer);
+    drawerClose.addEventListener("click", closeDrawer);
+    drawerNew.addEventListener("click", () => { newEssay(); closeDrawer(); setView("write"); });
+
+    searchEl.addEventListener("input", renderEssayList);
+
+    // Tabs
+    tabWriter.addEventListener("click", () => setPanel("writer"));
+    tabReader.addEventListener("click", () => setPanel("reader"));
+    tabOutline.addEventListener("click", () => setPanel("outline"));
+    tabNotes.addEventListener("click", () => setPanel("notes"));
+    tabMeta.addEventListener("click", () => setPanel("meta"));
+
+    // Buttons
+    btnNew.addEventListener("click", newEssay);
+
+    btnAddRevision.addEventListener("click", () => {
+      if (btnAddRevision.disabled) return;
+      addRevision();
+    });
+
+    // autosave inputs
+    [titleEl, bodyEl, outlineEl, notesEl, sourcesEl].forEach(el => {
+      el.addEventListener("input", () => {
+        scheduleSave();
+        maybeOpenAC(el);
+        refreshLinksTagsUI();
+        updateAddRevisionButton();
+      });
+      el.addEventListener("click", () => { maybeOpenAC(el); refreshLinksTagsUI(); updateAddRevisionButton(); });
+      el.addEventListener("keyup", () => { maybeOpenAC(el); refreshLinksTagsUI(); updateAddRevisionButton(); });
+      el.addEventListener("scroll", () => { if (acState.open && acState.ta === el) positionAC(el); });
+
+      el.addEventListener("keydown", (evt) => {
+        if (handleACKeydown(evt)) return;
+      });
+
+      el.addEventListener("blur", () => {
+        setTimeout(() => { if (!ac.contains(document.activeElement)) closeAC(); }, 120);
+      });
+    });
+
+    essayTypeEl.addEventListener("change", scheduleSave);
+    structureEl.addEventListener("change", () => { renderStructureHelp(); scheduleSave(); });
+
+    // Settings
+    themeDark.addEventListener("click", () => applyTheme("monokaiDark", { silent: false }));
+    themeLight.addEventListener("click", () => applyTheme("monokaiLight", { silent: false }));
+
+    function renderForcedLockToggle() {
+      const on = !!state.settings.forcedProgressLock;
+      toggleForcedLock.classList.toggle("on", on);
+      toggleForcedLock.setAttribute("aria-pressed", on ? "true" : "false");
+    }
+
+    toggleForcedLock.addEventListener("click", () => {
+      state.settings.forcedProgressLock = !state.settings.forcedProgressLock;
+      saveState();
+      renderForcedLockToggle();
+      toast(`Forced progression lock: ${state.settings.forcedProgressLock ? "ON" : "OFF"}`);
+    });
+
     btnExport.addEventListener("click", () => {
+      doSave();
       const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = "one-paragraph-essays.json";
+      a.download = "ourstuff-essays.json";
       a.click();
       URL.revokeObjectURL(url);
       toast("Exported");
@@ -897,12 +2428,39 @@
           currentId: parsed.currentId ?? null,
           untitledCounter: parsed.untitledCounter ?? 1,
           view: "write",
-          mode: state.mode // keep current mode
+          panel: state.panel || "writer",
+          settings: { forcedProgressLock: true, ...(parsed.settings || {}) }
         };
+        if (typeof state.settings.forcedProgressLock !== "boolean") state.settings.forcedProgressLock = true;
+
+        state.essays.forEach(e => { ensureEssaySchema(e); recomputeDerivedAll(e); });
+
+        // Ensure something is selected so progress is always clickable
+        if (!state.currentId) {
+          if (state.essays.length) state.currentId = state.essays[0].id;
+          else ensureEssayExists(true);
+        }
+
         saveState();
+
+        renderForcedLockToggle();
         renderEssayList();
+
         const cur = getCurrentEssay();
-        if (cur) loadEssay(cur.id);
+        if (cur) {
+          titleEl.value = cur.title || "";
+          essayTypeEl.value = cur.type || "explanatory";
+          structureEl.value = cur.structure || "problem-evidence-solution";
+          renderStructureHelp();
+          loadStageIntoEditors(cur, cur.progress.currentKey || "started");
+          setMeta(cur);
+        } else {
+          setMeta(null);
+        }
+
+        renderProgressUI();
+        refreshLinksTagsUI();
+        updateAddRevisionButton();
         toast("Imported");
       } catch {
         toast("Import failed");
@@ -914,22 +2472,40 @@
     btnWipe.addEventListener("click", () => {
       if (!confirm("Wipe all saved essays and settings from this browser?")) return;
       localStorage.removeItem(STORAGE_KEY);
-      // keep theme choice? you asked wipe all local data -> wipe theme too
+      localStorage.removeItem("oe_state_v4");
+      localStorage.removeItem("oe_state_v3");
+      localStorage.removeItem("oe_state_v2");
+      localStorage.removeItem("oe_state_v1");
       localStorage.removeItem(THEME_KEY);
-      state = { essays: [], currentId: null, untitledCounter: 1, view: "write", mode: "editor" };
-      loadTheme(); // re-applies default if theme removed
+
+      state = { essays: [], currentId: null, untitledCounter: 1, view: "write", panel: "writer", settings: { forcedProgressLock: true } };
+      loadTheme();
       saveState();
+
       titleEl.value = "";
       bodyEl.value = "";
-      setMode("editor");
+      outlineEl.value = "";
+      notesEl.value = "";
+      sourcesEl.value = "";
+
+      setPanel("writer");
       setView("write");
-      renderEssayList();
+
+      // Create a fresh essay immediately so progress is never dead
+      const fresh = ensureEssayExists(true);
       renderStructureHelp();
-      setMeta(null);
+      loadStageIntoEditors(fresh, fresh.progress.currentKey || "started");
+      setMeta(fresh);
+
+      renderEssayList();
+      renderProgressUI();
+      refreshLinksTagsUI();
+      renderForcedLockToggle();
+      updateAddRevisionButton();
       toast("Wiped");
     });
 
-    // Keyboard shortcut: Ctrl/Cmd+K opens drawer
+    // drawer shortcut
     window.addEventListener("keydown", (e) => {
       const isMac = navigator.platform.toLowerCase().includes("mac");
       const mod = isMac ? e.metaKey : e.ctrlKey;
@@ -943,32 +2519,40 @@
     // ------------------------------
     // Init
     // ------------------------------
-    function escapeHtml(s) {
-      return String(s)
-        .replaceAll("&","&amp;")
-        .replaceAll("<","&lt;")
-        .replaceAll(">","&gt;")
-        .replaceAll('"',"&quot;")
-        .replaceAll("'","&#039;");
-    }
-
-    // first render
     renderStructureHelp();
     setView(state.view);
-    setMode(state.mode);
+    setPanel(state.panel || "writer");
 
-    // load current essay if any
+    state.essays.forEach(e => { ensureEssaySchema(e); recomputeDerivedAll(e); });
+
+    renderForcedLockToggle();
+
+    // Ensure an active essay exists so progress tracker is ALWAYS usable
     if (state.currentId) {
-      const e = getCurrentEssay();
-      if (e) loadEssay(e.id);
-      else state.currentId = null;
-    } else {
-      setMeta(null);
-      renderEssayList();
+      const cur = getCurrentEssay();
+      if (!cur) state.currentId = null;
+    }
+    if (!state.currentId) {
+      if (state.essays.length) state.currentId = state.essays[0].id;
+      else ensureEssayExists(true);
     }
 
-    // Ensure select help text matches
-    essayType.value = essayType.value || "explanatory";
+    const cur = getCurrentEssay();
+    if (cur) {
+      titleEl.value = cur.title || "";
+      essayTypeEl.value = cur.type || "explanatory";
+      structureEl.value = cur.structure || "problem-evidence-solution";
+      renderStructureHelp();
+      loadStageIntoEditors(cur, cur.progress.currentKey || "started");
+      setMeta(cur);
+    } else {
+      setMeta(null);
+    }
+
+    renderEssayList();
+    renderProgressUI();
+    refreshLinksTagsUI();
+    updateAddRevisionButton();
   </script>
 </body>
 </html>
