@@ -411,6 +411,7 @@
                 <option value="question-explanation-answer">Question → Explanation → Answer</option>
                 <option value="claim-objection-rebuttal">Claim → Objection → Rebuttal</option>
                 <option value="five-point">5 Point Structure</option>
+                <option value="100-word-essay">100-Word Essay</option>
               </select>
             </div>
             <p id="structureHint" class="mt-2 text-xs text-[var(--muted)]"></p>
@@ -782,6 +783,7 @@ Book quote: “...” (p. 42)"></textarea>
                 <option value="question-explanation-answer">Question → Explanation → Answer</option>
                 <option value="claim-objection-rebuttal">Claim → Objection → Rebuttal</option>
                 <option value="five-point">5 Point Structure</option>
+                <option value="100-word-essay">100-Word Essay</option>
               </select>
             </div>
             <p id="structureHint" class="mt-2 text-xs text-[var(--muted)]"></p>
@@ -1360,6 +1362,16 @@ Book quote: “...” (p. 42)"></textarea>
           "3) Reasons against — strongest counterpoints (be fair).",
           "4) The crutch — your special/vital info + opinion (usually the longest).",
           "5) Conclusion — tie together points 1–4 and land the takeaway."
+        ]
+      },
+      "100-word-essay": {
+        hint: "A single tight paragraph. Every sentence has a job — total target: ~100 words.",
+        beats: [
+          "Sentence 1 — Hook / Claim (~15–20 words): State your main point boldly. No warm-up.",
+          "Sentence 2 — Context (~15–20 words): Give just enough background so the reader is grounded.",
+          "Sentence 3 — Evidence / Reason 1 (~15–20 words): Your strongest supporting fact, example, or reason.",
+          "Sentence 4 — Evidence / Reason 2 (~15–20 words): A second detail that deepens or extends the point.",
+          "Sentence 5 — Closing (~15–20 words): Land the takeaway — what the reader should think, feel, or do."
         ]
       }
     };
@@ -1994,6 +2006,7 @@ Book quote: “...” (p. 42)"></textarea>
         case "question-explanation-answer": return "Question → Explanation → Answer";
         case "claim-objection-rebuttal": return "Claim → Objection → Rebuttal";
         case "five-point": return "5 Point Structure";
+        case "100-word-essay": return "100-Word Essay";
         default: return "Structure";
       }
     }
