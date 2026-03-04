@@ -2541,7 +2541,7 @@ Book quote: “...” (p. 42)"></textarea>
 
     // Long press on mobile to open essay settings (500ms)
     let _esLongPressTimer = null;
-    btnEssaySettings.addEventListener("touchstart", (e) => {
+    btnEssaySettings.addEventListener("touchstart", () => {
       _esLongPressTimer = setTimeout(() => { openEssaySettings(); }, 500);
     }, { passive: true });
     btnEssaySettings.addEventListener("touchend", () => { clearTimeout(_esLongPressTimer); });
