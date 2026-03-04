@@ -329,12 +329,35 @@
           </div>
 
           <nav class="flex items-center gap-2">
-            <button id="navWrite" class="px-3 py-2 border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface2)] transition text-sm font-semibold"
-                    style="border-radius: var(--r2);">Write</button>
-            <button id="navEssays" class="px-3 py-2 border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface2)] transition text-sm font-semibold"
-                    style="border-radius: var(--r2);">Essays</button>
-            <button id="navSettings" class="px-3 py-2 border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface2)] transition text-sm font-semibold"
-                    style="border-radius: var(--r2);">Settings</button>
+            <!-- Write -->
+            <button id="navWrite" class="flex items-center gap-1.5 px-3 py-2 border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface2)] transition text-sm font-semibold"
+                    style="border-radius: var(--r2);">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <span class="hidden sm:inline">Write</span>
+            </button>
+
+            <!-- Essays -->
+            <button id="navEssays" class="flex items-center gap-1.5 px-3 py-2 border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface2)] transition text-sm font-semibold"
+                    style="border-radius: var(--r2);">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+              <span class="hidden sm:inline">Essays</span>
+            </button>
+
+            <!-- Settings -->
+            <button id="navSettings" class="flex items-center gap-1.5 px-3 py-2 border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface2)] transition text-sm font-semibold"
+                    style="border-radius: var(--r2);">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <span class="hidden sm:inline">Settings</span>
+            </button>
 
             <!-- Random (far right) -->
             <button id="navRandom" class="tip px-3 py-2 border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface2)] transition"
@@ -357,62 +380,27 @@
     <main class="mx-auto max-w-5xl px-4 py-6">
       <!-- WRITE VIEW -->
       <section id="viewWrite" class="space-y-5">
-        <div class="grid gap-4 md:grid-cols-12">
-          <div class="md:col-span-4">
-            <label class="text-xs font-semibold text-[var(--muted)]">Essay type</label>
-            <div class="mt-2">
-              <select id="essayType"
-                      class="w-full border border-[var(--border)] bg-[var(--surface)] px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary2)]"
-                      style="border-radius: var(--r2);">
-                <option value="explanatory">Explanatory</option>
-                <option value="persuasive">Persuasive</option>
-                <option value="narrative">Narrative</option>
-                <option value="analytical">Analytical</option>
-                <option value="reflective">Reflective</option>
-              </select>
-            </div>
-            <p class="mt-2 text-xs text-[var(--muted)]">Autocomplete: type <span class="font-mono">[[</span> for links, <span class="font-mono">#</span> for tags.</p>
-          </div>
-
-          <div class="md:col-span-8">
-            <label class="text-xs font-semibold text-[var(--muted)]">Structure</label>
-            <div class="mt-2">
-              <select id="structure"
-                      class="w-full border border-[var(--border)] bg-[var(--surface)] px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary2)]"
-                      style="border-radius: var(--r2);">
-                <option value="problem-evidence-solution">Problem → Evidence → Solution</option>
-                <option value="story-lesson">Story → Lesson</option>
-                <option value="question-explanation-answer">Question → Explanation → Answer</option>
-                <option value="claim-objection-rebuttal">Claim → Objection → Rebuttal</option>
-                <option value="five-point">5 Point Structure</option>
-              </select>
-            </div>
-            <p id="structureHint" class="mt-2 text-xs text-[var(--muted)]"></p>
-          </div>
-        </div>
-
-        <!-- Blueprint -->
-        <div class="border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadowSoft)]"
-             style="border-radius: var(--r3);">
-          <div class="flex items-center justify-between gap-3">
-            <div>
-              <div class="text-sm font-extrabold">Blueprint</div>
-              <div class="text-xs text-[var(--muted)]">Use structure beats as a checklist (sentence-level or paragraph-level).</div>
-            </div>
-            <div class="text-xs text-[var(--muted)]" id="autosaveStatus">Autosave: ready</div>
-          </div>
-          <div class="mt-3">
-            <div class="text-xs font-semibold text-[var(--muted)]">Structure beats</div>
-            <div id="beats"
-                 class="mt-2 border border-[var(--border)] bg-[var(--bg)] p-3 text-sm leading-relaxed"
-                 style="border-radius: var(--r2);"></div>
-          </div>
-        </div>
 
         <!-- Writing Card -->
         <div class="border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow)]"
              style="border-radius: var(--r3);">
-          <label class="text-xs font-semibold text-[var(--muted)]">Title</label>
+          <div class="flex items-center justify-between gap-3">
+            <label class="text-xs font-semibold text-[var(--muted)]">Title</label>
+            <div class="flex items-center gap-2">
+              <div class="text-xs text-[var(--muted)]" id="autosaveStatus">Autosave: ready</div>
+              <button id="btnEssaySettings"
+                      class="tip flex items-center gap-1.5 px-2 py-1.5 text-xs font-semibold border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface2)] transition"
+                      style="border-radius: var(--r2);"
+                      data-tip="Edit this essay's settings"
+                      title="Edit this essay's settings">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span class="hidden sm:inline">Essay Settings</span>
+              </button>
+            </div>
+          </div>
           <input id="title"
                  class="mt-2 w-full border border-[var(--border)] bg-[var(--bg)] px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary2)]"
                  style="border-radius: var(--r2);"
@@ -441,12 +429,12 @@
           <div class="mt-4 border border-[var(--border)] bg-[var(--bg)] px-2 py-2 flex items-center justify-between gap-2"
                style="border-radius: var(--r2);">
             <div class="flex items-center gap-2 flex-wrap">
+              <button id="tabOutline" class="px-3 py-2 text-sm font-semibold border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface2)] transition"
+                      style="border-radius: var(--r2);">Outline</button>
               <button id="tabWriter" class="px-3 py-2 text-sm font-semibold border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface2)] transition"
                       style="border-radius: var(--r2);">Writer</button>
               <button id="tabReader" class="px-3 py-2 text-sm font-semibold border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface2)] transition"
                       style="border-radius: var(--r2);">Reader</button>
-              <button id="tabOutline" class="px-3 py-2 text-sm font-semibold border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface2)] transition"
-                      style="border-radius: var(--r2);">Outline</button>
               <button id="tabNotes" class="px-3 py-2 text-sm font-semibold border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface2)] transition"
                       style="border-radius: var(--r2);">Notes</button>
               <button id="tabSources" class="px-3 py-2 text-sm font-semibold border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface2)] transition"
@@ -472,11 +460,21 @@
           </div>
 
           <div class="mt-3 hidden" id="panelOutline">
-            <label class="text-xs font-semibold text-[var(--muted)]">Outline</label>
-            <textarea id="outline"
-                      class="mt-2 min-h-[200px] w-full border border-[var(--border)] bg-[var(--bg)] px-4 py-3 text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-[var(--primary2)]"
-                      style="border-radius: var(--r2);"
-                      placeholder="Outline mode (plain textarea for now). Use [[links]] and #tags."></textarea>
+            <div class="grid gap-3 md:grid-cols-2">
+              <div>
+                <label class="text-xs font-semibold text-[var(--muted)]">Outline</label>
+                <textarea id="outline"
+                          class="mt-2 min-h-[260px] w-full border border-[var(--border)] bg-[var(--bg)] px-4 py-3 text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-[var(--primary2)]"
+                          style="border-radius: var(--r2);"
+                          placeholder="Write your outline here.&#10;&#10;Supports:&#10;# Heading&#10;## Sub-heading&#10;1. Numbered item&#10;- Bullet item&#10;  Indent with spaces for sub-levels&#10;&#10;Use [[links]] and #tags."></textarea>
+              </div>
+              <div>
+                <label class="text-xs font-semibold text-[var(--muted)]">Table of Contents</label>
+                <div id="outlineViewer"
+                     class="mt-2 min-h-[260px] border border-[var(--border)] bg-[var(--bg)] px-4 py-3 overflow-auto"
+                     style="border-radius: var(--r2);"></div>
+              </div>
+            </div>
           </div>
 
           <div class="mt-3 hidden" id="panelNotes">
@@ -670,6 +668,80 @@ Book quote: “...” (p. 42)"></textarea>
           <button id="drawerNew"
                   class="w-full bg-[var(--primary)] text-black font-extrabold px-4 py-3 hover:brightness-110 transition"
                   style="border-radius: var(--r2);">New Essay</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Essay Settings Overlay -->
+    <div id="essaySettingsOverlay" class="hidden fixed inset-0 z-40 bg-black/60"></div>
+
+    <!-- Essay Settings Drawer (left side) -->
+    <aside id="essaySettingsDrawer"
+           class="fixed left-0 top-0 z-50 h-full w-[300px] max-w-[92vw] -translate-x-full transition-transform duration-200"
+           aria-hidden="true">
+      <div class="h-full border-r border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow)] flex flex-col">
+        <div class="px-4 py-4 border-b border-[var(--border)] flex items-center justify-between gap-3">
+          <div>
+            <div class="text-sm font-extrabold">Essay Settings</div>
+            <div class="text-xs text-[var(--muted)]">Type, Structure &amp; Blueprint</div>
+          </div>
+          <button id="essaySettingsClose"
+                  class="border border-[var(--border)] bg-[var(--bg)] p-2 hover:bg-[var(--surface2)] transition"
+                  style="border-radius: var(--r2);"
+                  aria-label="Close">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M18 6 6 18M6 6l12 12" stroke="var(--text)" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="flex-1 overflow-auto p-4 space-y-5">
+          <!-- Essay Type -->
+          <div>
+            <label class="text-xs font-semibold text-[var(--muted)]">Essay type</label>
+            <div class="mt-2">
+              <select id="essayType"
+                      class="w-full border border-[var(--border)] bg-[var(--surface)] px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary2)]"
+                      style="border-radius: var(--r2);">
+                <option value="explanatory">Explanatory</option>
+                <option value="persuasive">Persuasive</option>
+                <option value="narrative">Narrative</option>
+                <option value="analytical">Analytical</option>
+                <option value="reflective">Reflective</option>
+              </select>
+            </div>
+            <p class="mt-2 text-xs text-[var(--muted)]">Autocomplete: type <span class="font-mono">[[</span> for links, <span class="font-mono">#</span> for tags.</p>
+          </div>
+
+          <!-- Structure -->
+          <div>
+            <label class="text-xs font-semibold text-[var(--muted)]">Structure</label>
+            <div class="mt-2">
+              <select id="structure"
+                      class="w-full border border-[var(--border)] bg-[var(--surface)] px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary2)]"
+                      style="border-radius: var(--r2);">
+                <option value="problem-evidence-solution">Problem → Evidence → Solution</option>
+                <option value="story-lesson">Story → Lesson</option>
+                <option value="question-explanation-answer">Question → Explanation → Answer</option>
+                <option value="claim-objection-rebuttal">Claim → Objection → Rebuttal</option>
+                <option value="five-point">5 Point Structure</option>
+              </select>
+            </div>
+            <p id="structureHint" class="mt-2 text-xs text-[var(--muted)]"></p>
+          </div>
+
+          <!-- Blueprint -->
+          <div class="border border-[var(--border)] bg-[var(--bg)] p-4"
+               style="border-radius: var(--r3);">
+            <div class="text-sm font-extrabold">Blueprint</div>
+            <div class="text-xs text-[var(--muted)]">Use structure beats as a checklist (sentence-level or paragraph-level).</div>
+            <div class="mt-3">
+              <div class="text-xs font-semibold text-[var(--muted)]">Structure beats</div>
+              <div id="beats"
+                   class="mt-2 border border-[var(--border)] bg-[var(--surface)] p-3 text-sm leading-relaxed"
+                   style="border-radius: var(--r2);"></div>
+            </div>
+          </div>
         </div>
       </div>
     </aside>
@@ -1115,6 +1187,13 @@ Book quote: “...” (p. 42)"></textarea>
     const structureHint = $("structureHint");
     const beats = $("beats");
 
+    const outlineViewerEl = $("outlineViewer");
+
+    const essaySettingsDrawer = $("essaySettingsDrawer");
+    const essaySettingsOverlay = $("essaySettingsOverlay");
+    const essaySettingsClose = $("essaySettingsClose");
+    const btnEssaySettings = $("btnEssaySettings");
+
     const titleEl = $("title");
     const bodyEl = $("body");
     const outlineEl = $("outline");
@@ -1234,8 +1313,92 @@ Book quote: “...” (p. 42)"></textarea>
     }
 
     // ------------------------------
-    // Links & Tags panel (current stage)
+    // Outline TOC Viewer
     // ------------------------------
+    function renderOutlineTOC() {
+      if (!outlineViewerEl) return;
+      const text = outlineEl.value || "";
+      const lines = text.split("\n");
+
+      if (!text.trim()) {
+        outlineViewerEl.innerHTML = '<div class="text-sm italic" style="color:var(--muted)">Start typing your outline — it will appear here as a structured table of contents.</div>';
+        return;
+      }
+
+      let html = '';
+      lines.forEach((rawLine) => {
+        if (!rawLine.trim()) {
+          html += '<div style="height:6px"></div>';
+          return;
+        }
+
+        // Indent level: tabs → 2 spaces each; 2 spaces = 1 level
+        const normalized = rawLine.replace(/\t/g, '  ');
+        const indentLen = normalized.match(/^(\s*)/)[1].length;
+        const level = Math.min(Math.floor(indentLen / 2), 5);
+        const line = rawLine.trim();
+        const indentPx = level * 16;
+
+        // Heading markers: # ## ###
+        const headingMatch = line.match(/^(#{1,4})\s+(.*)/);
+        if (headingMatch) {
+          const hLevel = headingMatch[1].length;
+          const content = headingMatch[2];
+          const indent = (hLevel - 1) * 16;
+          const styleColor = hLevel === 1 ? 'var(--text)' : 'var(--primary2)';
+          const fontWeight = hLevel <= 2 ? '800' : '600';
+          const fontSize = hLevel === 1 ? '14px' : '12px';
+          const prefix = hLevel > 1 ? '<span style="color:var(--primary2);margin-right:4px">›</span>' : '';
+          html += `<div style="padding-left:${indent}px;color:${styleColor};font-weight:${fontWeight};font-size:${fontSize}" class="py-0.5">${prefix}${escapeHtml(content)}</div>`;
+          return;
+        }
+
+        // Numbered items: 1. 2) 3:
+        const numberedMatch = line.match(/^(\d+[.):]\s*)(.*)/);
+        if (numberedMatch) {
+          const num = numberedMatch[1].trim();
+          const content = numberedMatch[2];
+          html += `<div style="padding-left:${indentPx}px" class="flex items-baseline gap-2 py-0.5">
+            <span style="color:var(--primary);font-family:monospace;font-weight:700;font-size:11px;min-width:18px;flex-shrink:0">${escapeHtml(num)}</span>
+            <span style="color:${level === 0 ? 'var(--text)' : 'var(--muted)'};font-size:${level === 0 ? '13px' : '12px'}">${escapeHtml(content)}</span>
+          </div>`;
+          return;
+        }
+
+        // Bullet items: - * • +
+        const bulletMatch = line.match(/^[-*•+]\s+(.*)/);
+        if (bulletMatch) {
+          const content = bulletMatch[1];
+          html += `<div style="padding-left:${indentPx}px" class="flex items-baseline gap-2 py-0.5">
+            <span style="color:var(--primary2);font-size:10px;flex-shrink:0">●</span>
+            <span style="color:${level === 0 ? 'var(--text)' : 'var(--muted)'};font-size:${level === 0 ? '13px' : '12px'}">${escapeHtml(content)}</span>
+          </div>`;
+          return;
+        }
+
+        // Plain text
+        html += `<div style="padding-left:${indentPx}px;color:${level === 0 ? 'var(--text)' : 'var(--muted)'};font-size:${level === 0 ? '13px' : '12px'};font-weight:${level === 0 ? '600' : '400'}" class="py-0.5">${escapeHtml(line)}</div>`;
+      });
+
+      outlineViewerEl.innerHTML = html;
+    }
+
+    // ------------------------------
+    // Essay Settings Drawer
+    // ------------------------------
+    function openEssaySettings() {
+      essaySettingsOverlay.classList.remove("hidden");
+      essaySettingsDrawer.classList.remove("-translate-x-full");
+      essaySettingsDrawer.setAttribute("aria-hidden", "false");
+    }
+
+    function closeEssaySettings() {
+      essaySettingsDrawer.classList.add("-translate-x-full");
+      essaySettingsOverlay.classList.add("hidden");
+      essaySettingsDrawer.setAttribute("aria-hidden", "true");
+    }
+
+
     function renderLinksTagsUIFromDraft(draft) {
       const all = `${draft?.body || ""}\n${draft?.outline || ""}\n${draft?.notes || ""}\n${draft?.sources || ""}`;
       const links = extractLinks(all);
@@ -1348,6 +1511,7 @@ Book quote: “...” (p. 42)"></textarea>
 
       refreshLinksTagsUI();
       if (state.panel === "reader") renderReader();
+      if (state.panel === "outline") renderOutlineTOC();
       updateAddRevisionButton();
     }
 
@@ -1630,6 +1794,7 @@ Book quote: “...” (p. 42)"></textarea>
       setActiveTab(tabMeta, panel === "meta");
 
       if (panel === "reader") renderReader();
+      if (panel === "outline") renderOutlineTOC();
       refreshLinksTagsUI();
       updateAddRevisionButton();
     }
@@ -2369,6 +2534,19 @@ Book quote: “...” (p. 42)"></textarea>
       addRevision();
     });
 
+    // Essay Settings Drawer
+    btnEssaySettings.addEventListener("click", openEssaySettings);
+    essaySettingsClose.addEventListener("click", closeEssaySettings);
+    essaySettingsOverlay.addEventListener("click", closeEssaySettings);
+
+    // Long press on mobile to open essay settings (500ms)
+    let _esLongPressTimer = null;
+    btnEssaySettings.addEventListener("touchstart", (e) => {
+      _esLongPressTimer = setTimeout(() => { openEssaySettings(); }, 500);
+    }, { passive: true });
+    btnEssaySettings.addEventListener("touchend", () => { clearTimeout(_esLongPressTimer); });
+    btnEssaySettings.addEventListener("touchmove", () => { clearTimeout(_esLongPressTimer); });
+
     // autosave inputs
     [titleEl, bodyEl, outlineEl, notesEl, sourcesEl].forEach(el => {
       el.addEventListener("input", () => {
@@ -2376,6 +2554,7 @@ Book quote: “...” (p. 42)"></textarea>
         maybeOpenAC(el);
         refreshLinksTagsUI();
         updateAddRevisionButton();
+        if (el === outlineEl) renderOutlineTOC();
       });
       el.addEventListener("click", () => { maybeOpenAC(el); refreshLinksTagsUI(); updateAddRevisionButton(); });
       el.addEventListener("keyup", () => { maybeOpenAC(el); refreshLinksTagsUI(); updateAddRevisionButton(); });
