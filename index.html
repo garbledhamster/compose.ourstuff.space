@@ -108,6 +108,24 @@
       margin: 0.9rem 0;
     }
 
+    /* Reader panel: Times New Roman 12pt */
+    #panelReader .md {
+      font-family: 'Times New Roman', Times, serif;
+      font-size: 12pt;
+    }
+    #panelReader .md p { line-height: 1.8; }
+
+    /* TOC "Create outline" link button */
+    .toc-create-btn {
+      color: var(--primary2);
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      font-size: inherit;
+      text-decoration: underline;
+    }
+
     .chip {
       display: inline-flex;
       align-items: center;
@@ -443,6 +461,15 @@
                  style="border-radius: var(--r2);"
                  placeholder="Give it a name (optional)..." />
 
+          <!-- Table of Contents (always visible) -->
+          <div class="mt-4 border border-[var(--border)] bg-[var(--bg)] px-4 py-3"
+               style="border-radius: var(--r2);">
+            <label class="text-xs font-semibold text-[var(--muted)]">Table of Contents</label>
+            <div id="outlineViewer"
+                 class="mt-2 overflow-auto"
+                 style="min-height:48px; max-height:200px;"></div>
+          </div>
+
           <!-- Progress (single main track) -->
           <div class="mt-4 pbar-wrap">
             <div class="flex items-center justify-between gap-2">
@@ -499,21 +526,11 @@
           </div>
 
           <div class="mt-3 hidden" id="panelOutline">
-            <div class="grid gap-3 md:grid-cols-2">
-              <div>
-                <label class="text-xs font-semibold text-[var(--muted)]">Outline</label>
-                <textarea id="outline"
-                          class="mt-2 min-h-[260px] w-full border border-[var(--border)] bg-[var(--bg)] px-4 py-3 text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-[var(--primary2)]"
-                          style="border-radius: var(--r2);"
-                          placeholder="Write your outline here.&#10;&#10;Supports:&#10;# Heading&#10;## Sub-heading&#10;1. Numbered item&#10;- Bullet item&#10;  Indent with spaces for sub-levels&#10;&#10;Use [[links]] and #tags."></textarea>
-              </div>
-              <div>
-                <label class="text-xs font-semibold text-[var(--muted)]">Table of Contents</label>
-                <div id="outlineViewer"
-                     class="mt-2 min-h-[260px] border border-[var(--border)] bg-[var(--bg)] px-4 py-3 overflow-auto"
-                     style="border-radius: var(--r2);"></div>
-              </div>
-            </div>
+            <label class="text-xs font-semibold text-[var(--muted)]">Outline</label>
+            <textarea id="outline"
+                      class="mt-2 min-h-[260px] w-full border border-[var(--border)] bg-[var(--bg)] px-4 py-3 text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-[var(--primary2)]"
+                      style="border-radius: var(--r2);"
+                      placeholder="Write your outline here.&#10;&#10;Supports:&#10;# Heading&#10;## Sub-heading&#10;1. Numbered item&#10;- Bullet item&#10;  Indent with spaces for sub-levels&#10;&#10;Use [[links]] and #tags."></textarea>
           </div>
 
           <div class="mt-3 hidden" id="panelNotes">
@@ -557,10 +574,7 @@ Book quote: “...” (p. 42)"></textarea>
             <div class="border border-[var(--border)] bg-[var(--bg)] px-4 py-3"
                  style="border-radius: var(--r2);">
               <div class="flex items-start justify-between gap-3">
-                <div>
-                  <div class="text-xs font-semibold text-[var(--muted)]">Links & Tags</div>
-                  <div class="mt-1 text-[11px] text-[var(--muted)]">Auto-detected across Writer / Outline / Notes / Sources (current stage).</div>
-                </div>
+                <div class="text-[11px] text-[var(--muted)]">Auto-detected across Writer / Outline / Notes / Sources (current stage).</div>
                 <div class="text-[11px] text-[var(--muted)]">Click chips to open.</div>
               </div>
 
@@ -599,10 +613,6 @@ Book quote: “...” (p. 42)"></textarea>
               </div>
 
               <div class="mt-6 border-t border-[var(--border)] pt-4">
-                <div class="flex items-center justify-between gap-3">
-                  <div class="text-xs font-semibold text-[var(--muted)]">Links & Tags</div>
-                  <div class="text-[11px] text-[var(--muted)]">Clickable</div>
-                </div>
                 <div class="mt-3 grid gap-3 md:grid-cols-12">
                   <div class="md:col-span-6">
                     <div class="text-[11px] text-[var(--muted)]">Links</div>
@@ -1395,7 +1405,7 @@ Book quote: “...” (p. 42)"></textarea>
       const lines = text.split("\n");
 
       if (!text.trim()) {
-        outlineViewerEl.innerHTML = '<div class="text-sm italic" style="color:var(--muted)">Start typing your outline — it will appear here as a structured table of contents.</div>';
+        outlineViewerEl.innerHTML = '<div class="text-sm" style="color:var(--muted)"><button type="button" class="toc-create-btn" data-goto-outline="1">→ Create outline</button></div>';
         return;
       }
 
@@ -1588,7 +1598,7 @@ Book quote: “...” (p. 42)"></textarea>
 
       refreshLinksTagsUI();
       if (state.panel === "reader") renderReader();
-      if (state.panel === "outline") renderOutlineTOC();
+      renderOutlineTOC();
       updateAddRevisionButton();
     }
 
@@ -1898,7 +1908,7 @@ Book quote: “...” (p. 42)"></textarea>
       setActiveTab(tabMeta, panel === "meta");
 
       if (panel === "reader") renderReader();
-      if (panel === "outline") renderOutlineTOC();
+      renderOutlineTOC();
       refreshLinksTagsUI();
       updateAddRevisionButton();
     }
@@ -1973,6 +1983,7 @@ Book quote: “...” (p. 42)"></textarea>
       renderProgressUI();
       refreshLinksTagsUI();
       if (state.panel === "reader") renderReader();
+      renderOutlineTOC();
       updateAddRevisionButton();
     }
 
@@ -2526,6 +2537,14 @@ Book quote: “...” (p. 42)"></textarea>
     // Click handling: oe:// links, tag chips, tracker clicks, drawer actions
     // ------------------------------
     document.addEventListener("click", (e) => {
+      // "→ Create outline" link in TOC box
+      const gotoOutlineBtn = e.target.closest("[data-goto-outline]");
+      if (gotoOutlineBtn) {
+        e.preventDefault();
+        setPanel("outline");
+        return;
+      }
+
       // Delete revision "x" in progress bar
       const delRevBtn = e.target.closest("[data-delrev]");
       if (delRevBtn) {
