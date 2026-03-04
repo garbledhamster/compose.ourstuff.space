@@ -1756,7 +1756,7 @@ Book quote: “...” (p. 42)"></textarea>
       const srcWithLinks = convertObsidianLinksToMarkdownLinks(sourcesEl.value || "");
 
       const bodyHtml = marked.parse(bodyWithLinks, { mangle: false, headerIds: false });
-      const srcHtml = marked.parse(srcWithLinks, { mangle: false, headerIds: false });
+      const srcHtml = marked.parse(srcWithLinks, { mangle: false, headerIds: false, breaks: true });
 
       const cleanBody = DOMPurify.sanitize(bodyHtml, { USE_PROFILES: { html: true } });
       const cleanSrc = DOMPurify.sanitize(srcHtml, { USE_PROFILES: { html: true } });
