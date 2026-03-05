@@ -1125,6 +1125,43 @@ Book quote: “...” (p. 42)"></textarea>
 
       if (!Array.isArray(e.tags)) e.tags = [];
       if (!Array.isArray(e.links)) e.links = [];
+
+      // Artifact template fields
+      if (typeof e.owner !== "string") e.owner = "";
+      if (!e.acl || typeof e.acl !== "object") e.acl = { owners: [], editors: [], viewers: [] };
+      if (!Array.isArray(e.acl.owners)) e.acl.owners = [];
+      if (!Array.isArray(e.acl.editors)) e.acl.editors = [];
+      if (!Array.isArray(e.acl.viewers)) e.acl.viewers = [];
+      if (typeof e.visibility !== "string") e.visibility = "private";
+      if (typeof e.primaryProjectId !== "string") e.primaryProjectId = "";
+      if (!Array.isArray(e.projectIds)) e.projectIds = [];
+      if (typeof e.status !== "string") e.status = "active";
+      if (typeof e.schemaVersion !== "number") e.schemaVersion = 1;
+      if (!e.refs || typeof e.refs !== "object") e.refs = { assets: [], sources: [], links: [] };
+      if (!Array.isArray(e.refs.assets)) e.refs.assets = [];
+      if (!Array.isArray(e.refs.sources)) e.refs.sources = [];
+      if (!Array.isArray(e.refs.links)) e.refs.links = [];
+      if (!e.data || typeof e.data !== "object") {
+        e.data = {
+          core: {
+            text: "",
+            context: { source: "", location: "", url: "" },
+            assetIds: [],
+            meta: {}
+          }
+        };
+      }
+      if (!e.data.core || typeof e.data.core !== "object") {
+        e.data.core = { text: "", context: { source: "", location: "", url: "" }, assetIds: [], meta: {} };
+      }
+      if (!e.data.core.context || typeof e.data.core.context !== "object") {
+        e.data.core.context = { source: "", location: "", url: "" };
+      }
+      if (!Array.isArray(e.data.core.assetIds)) e.data.core.assetIds = [];
+      if (!e.data.core.meta || typeof e.data.core.meta !== "object") e.data.core.meta = {};
+      if (!e.extraAttributes || typeof e.extraAttributes !== "object") {
+        e.extraAttributes = { extraAttribute1: "", extraAttribute2: "", extraAttribute3: "", extraAttribute4: "", extraAttribute5: "" };
+      }
     }
 
     function getStageList(e) {
@@ -1193,10 +1230,27 @@ Book quote: “...” (p. 42)"></textarea>
         untitledLabel: untitled,
         type: $("essayType").value,
         structure: $("structure").value,
+        owner: "",
+        acl: { owners: [], editors: [], viewers: [] },
+        visibility: "private",
+        primaryProjectId: "",
+        projectIds: [],
+        status: "active",
+        schemaVersion: 1,
         createdAt: nowIso(),
         updatedAt: nowIso(),
         tags: [],
         links: [],
+        refs: { assets: [], sources: [], links: [] },
+        data: {
+          core: {
+            text: "",
+            context: { source: "", location: "", url: "" },
+            assetIds: [],
+            meta: {}
+          }
+        },
+        extraAttributes: { extraAttribute1: "", extraAttribute2: "", extraAttribute3: "", extraAttribute4: "", extraAttribute5: "" },
         progress: {
           currentKey: "started",
           drafts: {
